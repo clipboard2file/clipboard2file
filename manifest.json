@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Clipboard2File",
+  "version": "1.0",
+  "description": "The friend",
+  "icons": {
+    "549": "/icons/clipboard2file.png"
+  },
+  "permissions": ["<all_urls>", "clipboardRead"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script/content.js"]
+    }
+  ]
+}
