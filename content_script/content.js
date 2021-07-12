@@ -9,7 +9,7 @@ function uuidv4() {
 const pickerID = uuidv4();
 const selectImageID = uuidv4();
 const selectAllID = uuidv4();
-const slideUpID = uuidv4();
+const slideUpID = `a${uuidv4()}`;
 
 const stylesheet = document.createElement("style");
 stylesheet.innerHTML = `div[id="${pickerID}"] {
@@ -27,7 +27,8 @@ stylesheet.innerHTML = `div[id="${pickerID}"] {
   border: 1px #52525e solid;
   position: absolute;
   z-index: 2147483647;
-  animation: ${slideUpID} 0.3s ease;
+  box-sizing: border-box;
+  animation: "${slideUpID}" 0.3s ease;
 }
 button[id="${selectAllID}"] {
   height: 30px;
@@ -63,7 +64,7 @@ img[id="${selectImageID}"]:active {
   outline: 2px solid rgb(128, 235, 255);
 }
 
-@keyframes ${slideUpID} {
+@keyframes "${slideUpID}" {
   0% {
       opacity: 0;
       transform: translateY(20px);
