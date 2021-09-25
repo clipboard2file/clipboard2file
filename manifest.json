@@ -2,9 +2,14 @@
   "manifest_version": 2,
   "name": "Clipboard2File",
   "version": "1.0",
-  "description": "The friend",
+  "description": "Clipboard2File is a tiny extension that lets you use an image on your clipboard as a file!",
   "icons": {
     "549": "/icons/clipboard2file.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "strict_min_version": "91.0"
+    }
   },
   "permissions": ["<all_urls>", "clipboardRead"],
   "content_scripts": [
