@@ -22,4 +22,6 @@
 />
 </div>
 
-<p align="center" style="margin-top: 12px">Clipboard2File is a tiny extension that let's you use an image on your clipboard as a file!</p>
+***
+
+<p align="center">Clipboard2File is a tiny extension that lets you use an image on your clipboard as a file!</p>
