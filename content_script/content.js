@@ -6,7 +6,6 @@ async function handleClick(e) {
     e.preventDefault();
 
     const clipboardItems = await navigator.clipboard.read();
-
     const clipboardImageItem = clipboardItems.find((item) => item.types.includes("image/png"));
 
     if (clipboardImageItem) {
@@ -38,9 +37,9 @@ async function handleClick(e) {
           const filenameDate = currentDateTime.substring(0, 10);
           const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, "-");
 
-          dataTransfer.items.add(new File([theImage], `img-${filenameDate}-${filenameTime}.png`));
+          dataTransfer.items.add(new File([theImage], `img-${filenameDate}-${filenameTime}.png`, { type: "image/png" }));
           e.target.files = dataTransfer.files;
-          e.target.dispatchEvent(new Event("change", { bubbles: true }));
+          e.target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         },
         { once: true }
       );
@@ -74,7 +73,7 @@ function replaceFilesOnInputWithFilesFromFakeInputAndYeah(e) {
     "change",
     () => {
       e.target.files = newInput.files;
-      e.target.dispatchEvent(new Event("change", { bubbles: true }));
+      e.target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     },
     { once: true }
   );
