@@ -1,5 +1,6 @@
 <style>
   #root {
+    all: unset;
     width: 250px;
     height: 200px;
     padding: 8px;
@@ -11,59 +12,65 @@
     background-color: #42414d;
     border: 1px #52525e solid;
     justify-content: space-between;
-    animation: slideUp 250ms ease;
     animation-fill-mode: forwards;
     box-sizing: border-box;
     z-index: 2147483647;
     border-radius: 8px;
     box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+    animation: slideUp 150ms cubic-bezier(0, 0, 0, 1);
   }
-  button {
+  #selectAll {
     font: menu;
     border: none;
-    margin-top: 8px;
+    margin-top: 10px;
     min-height: 32px;
     font-weight: 600;
     border-radius: 4px;
+    outline-offset: 2px;
     color: rgb(21, 20, 26);
     background-color: #00ddff;
     text-rendering: optimizeLegibility;
   }
-  button:hover {
+  #selectAll:hover {
     background-color: rgb(128, 235, 255);
   }
-  button:active {
+  #selectAll:active {
     background-color: rgb(170, 242, 255);
   }
-  button:focus-visible {
-    outline-offset: 2px;
+  #selectAll:focus-visible {
     outline: 2px solid #00ddff;
   }
-  img {
+  #preview {
     width: 100%;
     height: 100%;
     border-radius: 4px;
     object-fit: contain;
+    border: none;
+    background-size: contain;
+    background-repeat: no-repeat;
+    outline-offset: 2px;
+    background-color: unset;
+    background-position: center;
   }
-  img:is(:hover, :focus-within) {
+  #preview:is(:hover, :focus-within) {
     outline: 2px solid #00ddff;
   }
-  img:focus {
+  #preview:focus {
     outline: 2px solid rgb(128, 235, 255);
   }
-
   @keyframes slideUp {
-    0% {
+    from {
       opacity: 0;
       transform: translateY(-20px);
     }
-    100% {
+
+    to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 </style>
-<div id="root">
-  <img id="preview" tabindex="0" src="" />
+<div id="root" tabindex="-1">
+  <button id="preview"></button>
   <button id="selectAll">Show all files</button>
 </div>
