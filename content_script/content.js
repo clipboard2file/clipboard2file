@@ -10,20 +10,24 @@ async function handleClick(e) {
 
     if (clipboardImageItem) {
       const aside = document.createElement("aside");
+
       aside.style.all = "unset";
       aside.setAttribute("tabindex", -1);
+
       const shadow = aside.attachShadow({ mode: "closed", delegatesFocus: true });
       const theImage = await clipboardImageItem.getType("image/png");
       const frameRequest = await fetch(browser.runtime.getURL(`content_script/frame.html`));
+      const frameFragment = document.createRange().createContextualFragment(await frameRequest.text());
 
-      shadow.innerHTML = await frameRequest.text();
+      shadow.append(frameFragment);
 
       const preview = shadow.getElementById("preview");
-      preview.src = URL.createObjectURL(theImage);
       const root = shadow.getElementById("root");
       const selectAll = shadow.getElementById("selectAll");
 
-      root.style.left = (clientX < 0 ? 0 : clientX + window.visualViewport.pageLeft) + "px";
+      preview.style.backgroundImage = `url(${URL.createObjectURL(theImage)})`;
+
+      root.style.left = (clientX + 250 > window.visualViewport.width + window.visualViewport.pageLeft ? clientX - 250 : clientX) + "px";
       root.style.top = (clientY - 200 < 0 ? clientY + window.visualViewport.pageTop : clientY + window.visualViewport.pageTop - 200) + "px";
 
       preview.addEventListener(
@@ -52,7 +56,10 @@ async function handleClick(e) {
         { once: true }
       );
 
-      aside.addEventListener("focusout", (e) => aside.remove(), { passive: true, once: true });
+      aside.addEventListener("focusout", (e) => aside.remove(), { once: true });
+      aside.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") aside.remove();
+      });
 
       document.documentElement.append(aside);
       aside.focus({ preventScroll: true });
@@ -66,15 +73,15 @@ document.addEventListener("click", handleClick);
 document.addEventListener("pointerdown", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
 
 function replaceFilesOnInputWithFilesFromFakeInputAndYeah(e) {
-  const newInput = document.createElement("input");
-  for (attr of e.target.attributes) newInput.setAttribute(attr.name, attr.value);
-  newInput.click();
-  newInput.addEventListener(
+  const decoyInput = document.createElement("input");
+  for (attr of e.target.attributes) decoyInput.setAttribute(attr.name, attr.value);
+  decoyInput.addEventListener(
     "change",
     () => {
-      e.target.files = newInput.files;
+      e.target.files = decoyInput.files;
       e.target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     },
     { once: true }
   );
+  decoyInput.click();
 }
