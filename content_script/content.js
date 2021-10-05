@@ -27,8 +27,8 @@ async function handleClick(e) {
 
       preview.style.backgroundImage = `url(${URL.createObjectURL(theImage)})`;
 
-      root.style.left = (clientX + 250 > window.visualViewport.width + window.visualViewport.pageLeft ? clientX - 250 : clientX) + "px";
-      root.style.top = (clientY - 200 < 0 ? clientY + window.visualViewport.pageTop : clientY + window.visualViewport.pageTop - 200) + "px";
+      root.style.left = (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - 250 ? clientX + window.visualViewport.pageLeft : window.visualViewport.width + window.visualViewport.pageLeft - 250) + "px";
+      root.style.top = (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - 200 ? clientY + window.visualViewport.pageTop : window.visualViewport.height + window.visualViewport.pageTop - 200) + "px";
 
       preview.addEventListener(
         "click",
