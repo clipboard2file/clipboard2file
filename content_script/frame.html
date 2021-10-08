@@ -1,4 +1,7 @@
 <style>
+  :host {
+    all: unset !important;
+  }
   #root {
     all: unset;
     width: 250px;
@@ -12,7 +15,6 @@
     background-color: #42414d;
     border: 1px #52525e solid;
     justify-content: space-between;
-    animation-fill-mode: forwards;
     box-sizing: border-box;
     z-index: 2147483647;
     border-radius: 8px;
@@ -61,15 +63,12 @@
   @keyframes slideUp {
     from {
       opacity: 0;
+      pointer-events: none;
       transform: translateY(-20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
     }
   }
 </style>
+
 <div id="root" tabindex="-1">
   <button id="preview"></button>
   <button id="selectAll">Show all files</button>
