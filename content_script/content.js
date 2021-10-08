@@ -10,15 +10,12 @@ async function handleClick(e) {
 
     if (clipboardImageItem) {
       const aside = document.createElement("aside");
-
-      aside.style.all = "unset";
-      aside.setAttribute("tabindex", -1);
-
       const shadow = aside.attachShadow({ mode: "closed", delegatesFocus: true });
       const theImage = await clipboardImageItem.getType("image/png");
       const frameRequest = await fetch(browser.runtime.getURL(`content_script/frame.html`));
       const frameFragment = document.createRange().createContextualFragment(await frameRequest.text());
 
+      aside.setAttribute("tabindex", -1);
       shadow.append(frameFragment);
 
       const preview = shadow.getElementById("preview");
@@ -27,8 +24,17 @@ async function handleClick(e) {
 
       preview.style.backgroundImage = `url(${URL.createObjectURL(theImage)})`;
 
-      root.style.left = (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - 250 ? clientX + window.visualViewport.pageLeft : window.visualViewport.width + window.visualViewport.pageLeft - 250) + "px";
-      root.style.top = (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - 200 ? clientY + window.visualViewport.pageTop : window.visualViewport.height + window.visualViewport.pageTop - 200) + "px";
+      if (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - 250) {
+        root.style.left = clientX + window.visualViewport.pageLeft + "px";
+      } else {
+        root.style.left = window.visualViewport.width + window.visualViewport.pageLeft - 250 + "px";
+      }
+
+      if (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - 200) {
+        root.style.top = clientY + window.visualViewport.pageTop + "px";
+      } else {
+        root.style.top = clientY + window.visualViewport.pageTop - 200 + "px";
+      }
 
       preview.addEventListener(
         "click",
@@ -47,6 +53,7 @@ async function handleClick(e) {
         },
         { once: true }
       );
+
       selectAll.addEventListener(
         "click",
         () => {
@@ -70,7 +77,7 @@ async function handleClick(e) {
 }
 
 document.addEventListener("click", handleClick);
-document.addEventListener("pointerdown", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
+document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
 
 function replaceFilesOnInputWithFilesFromFakeInputAndYeah(e) {
   const decoyInput = document.createElement("input");
