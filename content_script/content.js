@@ -4,6 +4,7 @@ let clientY;
 async function handleClick(e) {
   if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])")) {
     e.preventDefault();
+    if (!navigator.clipboard.read) return replaceFilesOnInputWithFilesFromFakeInputAndYeah(e);
 
     const clipboardItems = await navigator.clipboard.read();
     const clipboardImageItem = clipboardItems.find((item) => item.types.includes("image/png"));
@@ -11,57 +12,60 @@ async function handleClick(e) {
     if (clipboardImageItem) {
       const aside = document.createElement("aside");
       const shadow = aside.attachShadow({ mode: "closed", delegatesFocus: true });
-      const theImage = await clipboardImageItem.getType("image/png");
+      const clipboardImage = await clipboardImageItem.getType("image/png");
       const frameRequest = await fetch(browser.runtime.getURL(`content_script/frame.html`));
       const frameFragment = document.createRange().createContextualFragment(await frameRequest.text());
 
-      aside.setAttribute("tabindex", -1);
       shadow.append(frameFragment);
 
-      const preview = shadow.getElementById("preview");
       const root = shadow.getElementById("root");
+      const preview = shadow.getElementById("preview");
       const selectAll = shadow.getElementById("selectAll");
 
-      preview.style.backgroundImage = `url(${URL.createObjectURL(theImage)})`;
+      aside.setAttribute("tabindex", -1);
+      root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
 
-      if (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - 250) {
+      const modalWidth = 250 / window.devicePixelRatio;
+      const modalHeight = 200 / window.devicePixelRatio;
+
+      if (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - modalWidth) {
         root.style.left = clientX + window.visualViewport.pageLeft + "px";
       } else {
-        root.style.left = window.visualViewport.width + window.visualViewport.pageLeft - 250 + "px";
+        root.style.left = window.visualViewport.width + window.visualViewport.pageLeft - modalWidth + "px";
       }
 
-      if (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - 200) {
+      if (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - modalHeight) {
         root.style.top = clientY + window.visualViewport.pageTop + "px";
       } else {
-        root.style.top = clientY + window.visualViewport.pageTop - 200 + "px";
+        root.style.top = clientY + window.visualViewport.pageTop - modalHeight + "px";
       }
+
+      const img = new Image();
+      img.src = URL.createObjectURL(clipboardImage);
+      await img.decode();
+
+      preview.style.backgroundImage = `url(${img.src})`;
 
       preview.addEventListener(
         "click",
         () => {
           aside.remove();
-          const dataTransfer = new DataTransfer();
 
           const date = new Date(Date.now());
           const currentDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000).toISOString();
           const filenameDate = currentDateTime.substring(0, 10);
           const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, "-");
 
-          dataTransfer.items.add(new File([theImage], `img-${filenameDate}-${filenameTime}.png`, { type: "image/png" }));
+          const dataTransfer = new DataTransfer();
+
+          dataTransfer.items.add(new File([clipboardImage], `img-${filenameDate}-${filenameTime}.png`, { type: "image/png" }));
           e.target.files = dataTransfer.files;
           e.target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         },
         { once: true }
       );
 
-      selectAll.addEventListener(
-        "click",
-        () => {
-          aside.remove();
-          replaceFilesOnInputWithFilesFromFakeInputAndYeah(e);
-        },
-        { once: true }
-      );
+      selectAll.addEventListener("click", () => replaceFilesOnInputWithFilesFromFakeInputAndYeah(e), { once: true });
 
       aside.addEventListener("focusout", (e) => aside.remove(), { once: true });
       aside.addEventListener("keydown", (e) => {
