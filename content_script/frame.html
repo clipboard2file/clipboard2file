@@ -4,32 +4,33 @@
   }
   #root {
     all: unset;
-    width: 250px;
-    height: 200px;
-    padding: 8px;
+    width: calc(250px / var(--devicePixelRatio));
+    height: calc(200px / var(--devicePixelRatio));
+    padding: calc(8px / var(--devicePixelRatio));
     display: flex;
     flex-flow: column;
-    border-radius: 8px;
+    border-radius: calc(8px / var(--devicePixelRatio));
     position: absolute;
     box-sizing: border-box;
     background-color: #42414d;
-    border: 1px #52525e solid;
+    border: calc(1px / var(--devicePixelRatio)) #52525e solid;
     justify-content: space-between;
     box-sizing: border-box;
     z-index: 2147483647;
-    border-radius: 8px;
-    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+    border-radius: calc(8px / var(--devicePixelRatio));
+    box-shadow: 0 calc(2px / var(--devicePixelRatio)) calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
     animation: slideUp 150ms cubic-bezier(0, 0, 0, 1);
   }
   #selectAll {
     font: menu;
-    border: none;
-    margin-top: 10px;
-    min-height: 32px;
     font-weight: 600;
-    border-radius: 4px;
-    outline-offset: 2px;
+    font-size: calc(12px / var(--devicePixelRatio));
+    margin-top: calc(10px / var(--devicePixelRatio));
+    min-height: calc(32px / var(--devicePixelRatio));
+    border-radius: calc(4px / var(--devicePixelRatio));
+    outline-offset: calc(2px / var(--devicePixelRatio));
     color: rgb(21, 20, 26);
+    border: none;
     background-color: #00ddff;
     text-rendering: optimizeLegibility;
   }
@@ -40,31 +41,31 @@
     background-color: rgb(170, 242, 255);
   }
   #selectAll:focus-visible {
-    outline: 2px solid #00ddff;
+    outline: calc(2px / var(--devicePixelRatio)) solid #00ddff;
   }
   #preview {
     width: 100%;
     height: 100%;
-    border-radius: 4px;
+    border-radius: calc(4px / var(--devicePixelRatio));
     object-fit: contain;
     border: none;
     background-size: contain;
     background-repeat: no-repeat;
-    outline-offset: 2px;
+    outline-offset: calc(2px / var(--devicePixelRatio));
     background-color: unset;
     background-position: center;
   }
   #preview:is(:hover, :focus-within) {
-    outline: 2px solid #00ddff;
+    outline: calc(2px / var(--devicePixelRatio)) solid #00ddff;
   }
   #preview:focus {
-    outline: 2px solid rgb(128, 235, 255);
+    outline: calc(2px / var(--devicePixelRatio)) solid rgb(128, 235, 255);
   }
   @keyframes slideUp {
     from {
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-20px);
+      transform: translateY(calc(-20px / var(--devicePixelRatio)));
     }
   }
 </style>
