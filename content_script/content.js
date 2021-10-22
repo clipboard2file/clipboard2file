@@ -60,12 +60,20 @@ async function handleClick(e) {
 
           dataTransfer.items.add(new File([clipboardImage], `img-${filenameDate}-${filenameTime}.png`, { type: "image/png" }));
           e.target.files = dataTransfer.files;
+          e.target.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
           e.target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         },
         { once: true }
       );
 
-      selectAll.addEventListener("click", () => replaceFilesOnInputWithFilesFromFakeInputAndYeah(e), { once: true });
+      selectAll.addEventListener(
+        "click",
+        () => {
+          aside.remove();
+          replaceFilesOnInputWithFilesFromFakeInputAndYeah(e);
+        },
+        { once: true }
+      );
 
       aside.addEventListener("focusout", (e) => aside.remove(), { once: true });
       aside.addEventListener("keydown", (e) => {
@@ -90,6 +98,7 @@ function replaceFilesOnInputWithFilesFromFakeInputAndYeah(e) {
     "change",
     () => {
       e.target.files = decoyInput.files;
+      e.target.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
       e.target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     },
     { once: true }
