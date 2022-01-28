@@ -14,8 +14,12 @@ async function handleClick(e) {
       const shadow = aside.attachShadow({ mode: "closed", delegatesFocus: true });
       const clipboardImage = await clipboardImageItem.getType("image/png");
       const frameRequest = await fetch(browser.runtime.getURL(`content_script/frame.html`));
+      const styleRequest = await fetch(browser.runtime.getURL(`content_script/frame.css`));
       const frameFragment = document.createRange().createContextualFragment(await frameRequest.text());
 
+      const styleElem = document.createElement("style");
+      styleElem.textContent = await styleRequest.text();
+      shadow.appendChild(styleElem);
       shadow.append(frameFragment);
 
       const root = shadow.getElementById("root");
