@@ -10,6 +10,7 @@ async function handleClick(e) {
     const clipboardImageItem = clipboardItems.find((item) => item.types.includes("image/png"));
 
     if (clipboardImageItem) {
+      console.log("gaming");
       const aside = document.createElement("aside");
       const shadow = aside.attachShadow({ mode: "closed", delegatesFocus: true });
       const clipboardImage = await clipboardImageItem.getType("image/png");
@@ -84,8 +85,21 @@ async function handleClick(e) {
         if (e.key === "Escape") aside.remove();
       });
 
-      document.documentElement.append(aside);
+      // temporarily no-op the ability for the page to focus anything before we create the popup
+      exportFunction(
+        function () {
+          return undefined;
+        },
+        HTMLElement.prototype,
+        { defineAs: "focus" }
+      );
+
+      document.documentElement.appendChild(aside);
       aside.focus({ preventScroll: true });
+      console.log(aside);
+
+      // then put it back
+      exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
     } else {
       replaceFilesOnInputWithFilesFromFakeInputAndYeah(e);
     }
