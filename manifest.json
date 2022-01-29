@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Clipboard2File",
-  "version": "1.9",
-  "description": "Clipboard2File is a tiny extension that lets you use an image on your clipboard as a file!",
+  "version": "1.10",
+  "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "/icons/clipboard2file.png"
   },
