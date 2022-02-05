@@ -4,6 +4,13 @@
   <head>
     <meta charset="utf-8" />
     <title>test page</title>
+    <link rel="shortcut icon" type="image/png" href="./icons/clipboard2file.png" />
+    <script>
+      Element.prototype._attachShadow = Element.prototype.attachShadow;
+      Element.prototype.attachShadow = function () {
+        return this._attachShadow({ mode: "open" });
+      };
+    </script>
     <style>
       html,
       body {
@@ -24,6 +31,6 @@
     </style>
   </head>
   <body>
-    <input id="testSpace" type="file" />
+    <input id="testSpace" type="file" tabindex="-1" />
   </body>
 </html>
