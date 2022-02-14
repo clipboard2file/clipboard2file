@@ -5,8 +5,8 @@ async function handleClick(e) {
   if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])")) {
     e.preventDefault();
 
-    // Fall back to default behavior if the user forgot to set dom.events.asyncClipboard.read to true in about:config
-    if (!navigator.clipboard.read) return showPicker(e.target);
+    // Fall back to default behavior if the navigator.clipboard is undefined or user forgot to set dom.events.asyncClipboard.read to true in about:config
+    if (!navigator.clipboard?.read) return showPicker(e.target);
 
     const clipboardItems = await navigator.clipboard.read();
 
