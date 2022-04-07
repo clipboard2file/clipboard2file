@@ -2,7 +2,7 @@ let clientX;
 let clientY;
 
 async function handleClick(e) {
-  if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])")) {
+  if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])") && e.type === "click") {
     e.preventDefault();
 
     // Fall back to default behavior if navigator.clipboard is undefined (inscure context, user forgot to set dom.events.asyncClipboard.read to true in about:config, etc.)
