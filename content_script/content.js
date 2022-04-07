@@ -136,6 +136,7 @@ async function handleClick(e) {
 
 window.addEventListener("click", handleClick);
 document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
+
 // fix for extension not working on tinypng.com or any other website that stops propagation of input events. i hope this doesn't break anything.
 exportFunction(
   function () {
@@ -149,7 +150,7 @@ exportFunction(
 function showPicker(elem) {
   const decoyInput = document.createElement("input");
   for (attr of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
-    if (elem.attributes[attr]?.value) decoyInput.setAttribute(attr, elem.attributes[attr]?.value);
+    if (elem.attributes[attr]) decoyInput.setAttribute(attr, elem.attributes[attr]?.value);
   }
   decoyInput.addEventListener(
     "change",
