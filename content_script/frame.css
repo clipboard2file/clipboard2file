@@ -3,16 +3,28 @@
 }
 
 #root {
+  --selectAll: rgb(0, 221, 255);
+  --selectAllHover: rgb(128, 235, 255);
+  --selectAllFont: rgb(21, 20, 26);
+  --filenameFocus: rgb(53, 132, 228);
+  --filenameFont: rgb(251, 251, 254);
+  --filenameBackground: rgb(28, 27, 34);
+  --selectAllActive: rgb(170, 242, 255);
+  --popupBackground: rgb(66, 65, 77);
+  --popupBorder: rgb(82, 82, 94);
+}
+
+#root {
   all: unset;
   width: calc(250px / var(--devicePixelRatio));
-  height: calc(200px / var(--devicePixelRatio));  
+  height: calc(200px / var(--devicePixelRatio));
   padding: calc(8px / var(--devicePixelRatio));
   display: flex;
   flex-flow: column;
   border-radius: calc(8px / var(--devicePixelRatio));
   position: absolute;
-  background-color: rgb(66, 65, 77);
-  border: calc(1px / var(--devicePixelRatio)) rgb(82, 82, 94) solid;
+  background-color: var(--popupBackground);
+  border: calc(1px / var(--devicePixelRatio)) var(--popupBorder) solid;
   justify-content: space-between;
   box-sizing: border-box;
   z-index: 2147483647;
@@ -29,23 +41,23 @@
   min-height: calc(32px / var(--devicePixelRatio));
   border-radius: calc(4px / var(--devicePixelRatio));
   outline-offset: calc(2px / var(--devicePixelRatio));
-  color: rgb(21, 20, 26);
+  color: var(--selectAllFont);
   border: none;
   box-sizing: border-box;
-  background-color: rgb(0, 221, 255);
+  background-color: var(--selectAll);
   text-rendering: optimizeLegibility;
 }
 
 #selectAll:hover {
-  background-color: rgb(128, 235, 255);
+  background-color: var(--selectAllHover);
 }
 
 #selectAll:active {
-  background-color: rgb(170, 242, 255);
+  background-color: var(--selectAllActive);
 }
 
 #selectAll:focus-visible {
-  outline: calc(2px / var(--devicePixelRatio)) solid rgb(0, 221, 255);
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
 }
 
 #preview {
@@ -62,11 +74,11 @@
 }
 
 #preview:is(:hover, :focus-within) {
-  outline: calc(2px / var(--devicePixelRatio)) solid rgb(0, 221, 255);
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
 }
 
 #preview:focus {
-  outline: calc(2px / var(--devicePixelRatio)) solid rgb(128, 235, 255);
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAllHover);
 }
 
 #filename {
@@ -77,12 +89,12 @@
   border-radius: calc(4px / var(--devicePixelRatio));
   margin-bottom: calc(10px / var(--devicePixelRatio));
   padding-inline: calc(5px / var(--devicePixelRatio));
-  color: rgb(251, 251, 254);
-  background-color: rgb(28, 27, 34);
+  color: var(--filenameFont);
+  background-color: var(--filenameBackground);
 }
 
 #filename:focus {
-  outline: calc(2px / var(--devicePixelRatio)) solid rgb(53, 132, 228);
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
 }
 
 @keyframes slideUp {
