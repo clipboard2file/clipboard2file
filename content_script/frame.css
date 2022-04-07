@@ -3,8 +3,9 @@
 }
 
 #root {
+  all: unset;
   width: calc(250px / var(--devicePixelRatio));
-  height: calc(200px / var(--devicePixelRatio));
+  height: calc(200px / var(--devicePixelRatio));  
   padding: calc(8px / var(--devicePixelRatio));
   display: flex;
   flex-flow: column;

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Clipboard2File",
-  "version": "2.1",
+  "version": "2.2",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "/icons/clipboard2file.png"
