@@ -5,7 +5,7 @@ async function handleClick(e) {
   if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])")) {
     e.preventDefault();
 
-    // Fall back to default behavior if the navigator.clipboard is undefined or user forgot to set dom.events.asyncClipboard.read to true in about:config
+    // Fall back to default behavior if navigator.clipboard is undefined (inscure context, user forgot to set dom.events.asyncClipboard.read to true in about:config, etc.)
     if (!navigator.clipboard?.read) return showPicker(e.target);
 
     const clipboardItems = await navigator.clipboard.read();
@@ -22,7 +22,6 @@ async function handleClick(e) {
       const styleRequest = await fetch(browser.runtime.getURL(`content_script/frame.css`));
       const frameFragment = document.createRange().createContextualFragment(await frameRequest.text());
 
-      // Work around CSP error when the <style> is included in frameFragment
       const styleElem = document.createElement("style");
       styleElem.textContent = await styleRequest.text();
       shadow.appendChild(styleElem);
@@ -32,18 +31,19 @@ async function handleClick(e) {
       const selectAll = shadow.getElementById("selectAll");
       const filenameInput = shadow.getElementById("filename");
 
-      let filename;
-      if (settings.defaultFilename === "unix") filename = String(Date.now());
-      else if (settings.defaultFilename === "unknown") filename = "unknown";
-      else filename = generateFilename();
+      let defaultFilename;
+      if (settings.defaultFilename === "unix") defaultFilename = String(Date.now());
+      else if (settings.defaultFilename === "unknown") defaultFilename = "unknown";
+      else defaultFilename = generateFilename();
 
-      filenameInput.value = `${filename}.png`;
-      filenameInput.setAttribute("placeholder", `${filename}.png`);
-      filenameInput.setSelectionRange(0, filename.length);
+      filenameInput.value = `${defaultFilename}.png`;
+      filenameInput.setAttribute("placeholder", `${defaultFilename}.png`);
+      filenameInput.setSelectionRange(0, defaultFilename.length);
 
       if (!settings.showFilenameBox) filenameInput.style.display = "none";
 
       aside.setAttribute("tabindex", -1);
+
       root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
 
       const img = new Image();
@@ -54,14 +54,22 @@ async function handleClick(e) {
       // this sucks a LOT and is a terrible hack. At some point I should refactor the entire extension to use iframes.
       for (const key in aside) {
         if (/^on/.test(key)) {
-          const eventType = key.substr(2);
+          const eventType = key.substring(2);
           aside.addEventListener(eventType, (e) => e.stopPropagation());
         }
       }
-      aside.addEventListener("focusout", (e) => aside.remove(), { once: true });
+
+      aside.addEventListener(
+        "focusout",
+        (e) => {
+          aside.remove();
+          exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
+        },
+        { once: true }
+      );
 
       aside.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") aside.remove();
+        if (e.key === "Escape") aside.dispatchEvent(new Event("focusout"));
       });
 
       filenameInput.addEventListener("keydown", (e) => {
@@ -71,11 +79,15 @@ async function handleClick(e) {
       preview.addEventListener(
         "click",
         async () => {
-          aside.remove();
+          aside.dispatchEvent(new Event("focusout"));
           if (settings.clearOnPaste) await navigator.clipboard.writeText("");
           const dataTransfer = new DataTransfer();
 
-          dataTransfer.items.add(new File([clipboardImage], filenameInput.value === filename ? filename : filenameInput.value, { type: "image/png" }));
+          let filename;
+          if (filenameInput.value === `${defaultFilename}.png` || filenameInput.value.length === 0) filename = `${defaultFilename}.png`;
+          else filename = filenameInput.value;
+
+          dataTransfer.items.add(new File([clipboardImage], filename, { type: "image/png" }));
 
           e.target.files = dataTransfer.files;
           e.target.dispatchEvent(new Event("input", { bubbles: true }));
@@ -87,7 +99,7 @@ async function handleClick(e) {
       selectAll.addEventListener(
         "click",
         () => {
-          aside.remove();
+          aside.dispatchEvent(new Event("focusout"));
           showPicker(e.target);
         },
         { once: true }
@@ -114,22 +126,31 @@ async function handleClick(e) {
 
       document.documentElement.appendChild(aside);
       aside.focus({ preventScroll: true });
-      filenameInput.focus();
 
-      // then put it back
-      exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
+      if (settings.showFilenameBox) filenameInput.focus();
     } else {
       showPicker(e.target);
     }
   }
 }
 
-document.addEventListener("click", handleClick);
+window.addEventListener("click", handleClick);
 document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
+// fix for extension not working on tinypng.com or any other website that stops propagation of input events. i hope this doesn't break anything.
+exportFunction(
+  function () {
+    this.stopPropagation();
+    handleClick(this);
+  },
+  Event.prototype,
+  { defineAs: "stopPropagation" }
+);
 
 function showPicker(elem) {
   const decoyInput = document.createElement("input");
-  for (attr of elem.attributes) decoyInput.setAttribute(attr.name, attr.value);
+  for (attr of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
+    if (elem.attributes[attr]?.value) decoyInput.setAttribute(attr, elem.attributes[attr]?.value);
+  }
   decoyInput.addEventListener(
     "change",
     () => {
