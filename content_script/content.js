@@ -2,7 +2,7 @@ let clientX;
 let clientY;
 
 async function handleClick(e) {
-  if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])") && e.type === "click") {
+  if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])")) {
     e.preventDefault();
 
     // Fall back to default behavior if navigator.clipboard is undefined (inscure context, user forgot to set dom.events.asyncClipboard.read to true in about:config, etc.)
@@ -81,6 +81,7 @@ async function handleClick(e) {
         async () => {
           aside.dispatchEvent(new Event("focusout"));
           if (settings.clearOnPaste) await navigator.clipboard.writeText("");
+
           const dataTransfer = new DataTransfer();
 
           let filename;
@@ -141,7 +142,7 @@ document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY =
 exportFunction(
   function () {
     this.stopPropagation();
-    handleClick(this);
+    if (this.type === "click") handleClick(this);
   },
   Event.prototype,
   { defineAs: "stopPropagation" }
