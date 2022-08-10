@@ -2,11 +2,11 @@ let clientX;
 let clientY;
 
 async function handleClick(e) {
-  if (e.target.matches("input[type=file]:not([webkitdirectory], [directory])")) {
+  if (e.target.matches("input[type=file]:not([webkitdirectory])")) {
     e.preventDefault();
 
-    // Fall back to default behavior if navigator.clipboard is undefined (inscure context, user forgot to set dom.events.asyncClipboard.read to true in about:config, etc.)
-    if (!navigator.clipboard?.read) return showPicker(e.target);
+    // Fall back to default behavior (inscure context, user forgot to set dom.events.asyncClipboard.clipboardItem to true in about:config, etc.)
+    if (!navigator.clipboard?.read) return e.target.showPicker();
 
     const clipboardItems = await navigator.clipboard.read();
 
@@ -65,7 +65,6 @@ async function handleClick(e) {
           aside.remove();
           exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
           exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
-          exportFunction(Event.prototype.preventDefault, Event.prototype, { defineAs: "preventDefault" });
         },
         { once: true }
       );
@@ -80,7 +79,7 @@ async function handleClick(e) {
 
       preview.addEventListener(
         "click",
-        async () => {
+        async (event) => {
           aside.dispatchEvent(new Event("focusout"));
           if (settings.clearOnPaste) await navigator.clipboard.writeText("");
 
@@ -103,7 +102,7 @@ async function handleClick(e) {
         "click",
         () => {
           aside.dispatchEvent(new Event("focusout"));
-          showPicker(e.target);
+          e.target.showPicker();
         },
         { once: true }
       );
@@ -123,18 +122,18 @@ async function handleClick(e) {
         root.style.top = clientY + window.visualViewport.pageTop - modalHeight + "px";
       }
 
-      // temporarily stop the page from being able to focus anything until the popup is created
+      // temporarily stop the page from being able to change focus
       // see https://github.com/vord1080/clipboard2file/issues/3#issuecomment-1024479980
-      exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
       exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
-      exportFunction(() => {}, Event.prototype, { defineAs: "preventDefault" });
+      exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
 
+      aside.isPopup = true;
       document.documentElement.appendChild(aside);
       aside.focus({ preventScroll: true });
 
       if (settings.showFilenameBox) filenameInput.focus();
     } else {
-      showPicker(e.target);
+      e.target.showPicker();
     }
   }
 }
@@ -145,29 +144,30 @@ document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY =
 // fix for extension not working on tinypng.com or any other website that stops propagation of input events. i hope this doesn't break anything.
 exportFunction(
   function () {
-    this.stopPropagation();
+    if (!this.target.isPopup) this.stopPropagation();
     if (this.type === "click") handleClick(this);
   },
   Event.prototype,
   { defineAs: "stopPropagation" }
 );
 
-function showPicker(elem) {
-  const decoyInput = document.createElement("input");
-  for (attr of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
-    if (elem.attributes[attr]) decoyInput.setAttribute(attr, elem.attributes[attr]?.value);
-  }
-  decoyInput.addEventListener(
-    "change",
-    () => {
-      elem.files = decoyInput.files;
-      elem.dispatchEvent(new Event("input", { bubbles: true }));
-      elem.dispatchEvent(new Event("change", { bubbles: true }));
-    },
-    { once: true }
-  );
-  decoyInput.click();
-}
+// fix for extension not working on neo-lms.com
+exportFunction(
+  function () {
+    if (!this.target.isPopup) this.stopImmediatePropagation();
+  },
+  Event.prototype,
+  { defineAs: "stopImmediatePropagation" }
+);
+
+// fix for extension not working on neo-lms.com
+exportFunction(
+  function () {
+    if (!this.target.isPopup) this.preventDefault();
+  },
+  Event.prototype,
+  { defineAs: "preventDefault" }
+);
 
 function generateFilename() {
   const date = new Date(Date.now());
