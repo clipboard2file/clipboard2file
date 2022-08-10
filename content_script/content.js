@@ -63,8 +63,9 @@ async function handleClick(e) {
         "focusout",
         (e) => {
           aside.remove();
-          exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
           exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
+          exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
+          exportFunction(Event.prototype.preventDefault, Event.prototype, { defineAs: "preventDefault" });
         },
         { once: true }
       );
@@ -126,6 +127,7 @@ async function handleClick(e) {
       // see https://github.com/vord1080/clipboard2file/issues/3#issuecomment-1024479980
       exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
       exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
+      exportFunction(() => {}, Event.prototype, { defineAs: "preventDefault" });
 
       document.documentElement.appendChild(aside);
       aside.focus({ preventScroll: true });
