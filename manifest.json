@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Clipboard2File",
-  "version": "2.5",
+  "version": "2.6",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "/icons/clipboard2file.png"
@@ -11,14 +11,14 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "strict_min_version": "91.0"
+      "strict_min_version": "102.0"
     }
   },
   "permissions": ["<all_urls>", "clipboardRead", "clipboardWrite", "storage"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "run_at": "document_end",
+      "run_at": "document_start",
       "all_frames": true,
       "js": ["content_script/content.js"]
     }
