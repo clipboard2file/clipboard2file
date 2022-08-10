@@ -64,6 +64,7 @@ async function handleClick(e) {
         (e) => {
           aside.remove();
           exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
+          exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
         },
         { once: true }
       );
@@ -124,6 +125,7 @@ async function handleClick(e) {
       // temporarily stop the page from being able to focus anything until the popup is created
       // see https://github.com/vord1080/clipboard2file/issues/3#issuecomment-1024479980
       exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
+      exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
 
       document.documentElement.appendChild(aside);
       aside.focus({ preventScroll: true });
