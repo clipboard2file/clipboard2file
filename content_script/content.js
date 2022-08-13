@@ -15,15 +15,16 @@ async function handleClick(e) {
 
     if (!clipboardImageItem) return e.target.showPicker();
 
-    const aside = document.createElement("aside");
-    const iframe = document.createElement("iframe");
-    const shadow = aside.attachShadow({ mode: "closed" });
     const clipboardImage = await clipboardImageItem.getType("image/png");
     const shadowStyleRequest = await fetch(browser.runtime.getURL(`content_script/frame.css`));
     const iframeRequest = await fetch(browser.runtime.getURL(`content_script/iframe.html`));
     const iframeStyleRequest = await fetch(browser.runtime.getURL(`content_script/iframe.css`));
 
     const settings = await browser.storage.local.get(["showFilenameBox", "clearOnPaste", "defaultFilename"]);
+
+    const aside = document.createElement("aside");
+    const iframe = document.createElement("iframe");
+    const shadow = aside.attachShadow({ mode: "closed" });
 
     const shadowStyleElement = document.createElement("style");
     const iframeStyleElement = document.createElement("style");
@@ -73,13 +74,13 @@ async function handleClick(e) {
 
     if (!settings.showFilenameBox) filenameInput.style.display = "none";
 
-    const img = new Image();
-    img.src = URL.createObjectURL(clipboardImage);
-    await img.decode();
-    preview.style.backgroundImage = `url(${img.src})`;
+    const previewImage = new Image();
+    previewImage.src = URL.createObjectURL(clipboardImage);
+    preview.style.backgroundImage = `url(${previewImage.src})`;
+    await previewImage.decode();
 
-    root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
     iframe.contentDocument.body.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
+    root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
 
     iframe.contentDocument.addEventListener("keydown", (e) => {
       if (e.key === "Escape") iframe.contentDocument.dispatchEvent(new Event("blur"));
@@ -123,6 +124,7 @@ async function handleClick(e) {
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
 
     iframe.contentDocument.addEventListener("blur", () => {
+      root.style.setProperty("opacity", "0", "important");
       aside.remove();
       exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
       exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
@@ -138,7 +140,7 @@ async function handleClick(e) {
 window.addEventListener("click", handleClick);
 document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
 
-// fix for extension not working on tinypng.com or any other website that stops propagation of input events. i hope this doesn't break anything.
+// fix for extension not working on tinypng.com or any other website that stops propagation of input events.
 exportFunction(
   function () {
     this.stopPropagation();
