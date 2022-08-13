@@ -1,0 +1,90 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  --selectAll: rgb(0, 221, 255);
+  --selectAllHover: rgb(128, 235, 255);
+  --selectAllFont: rgb(21, 20, 26);
+  --filenameFocus: rgb(53, 132, 228);
+  --filenameFont: rgb(251, 251, 254);
+  --filenameBackground: rgb(28, 27, 34);
+  --selectAllActive: rgb(170, 242, 255);
+}
+
+body {
+  padding: calc(8px / var(--devicePixelRatio));
+  display: flex;
+  flex-flow: column;
+  position: absolute;
+  justify-content: space-between;
+  box-sizing: border-box;
+  z-index: 2147483647;
+}
+
+#selectAll {
+  font: menu;
+  font-weight: 600;
+  font-size: calc(12px / var(--devicePixelRatio));
+  margin-top: calc(10px / var(--devicePixelRatio));
+  min-height: calc(32px / var(--devicePixelRatio));
+  border-radius: calc(4px / var(--devicePixelRatio));
+  outline-offset: calc(2px / var(--devicePixelRatio));
+  color: var(--selectAllFont);
+  border: none;
+  box-sizing: border-box;
+  background-color: var(--selectAll);
+  text-rendering: optimizeLegibility;
+}
+
+#selectAll:hover {
+  background-color: var(--selectAllHover);
+}
+
+#selectAll:active {
+  background-color: var(--selectAllActive);
+}
+
+#selectAll:focus-visible {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+}
+
+#preview {
+  width: 100%;
+  height: 100%;
+  border-radius: calc(4px / var(--devicePixelRatio));
+  object-fit: contain;
+  border: none;
+  background-size: contain;
+  background-repeat: no-repeat;
+  outline-offset: calc(2px / var(--devicePixelRatio));
+  background-color: unset;
+  background-position: center;
+}
+
+#preview:is(:hover, :focus-within) {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+}
+
+#preview:focus {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAllHover);
+}
+
+#filename {
+  border: none;
+  box-sizing: border-box;
+  font-size: calc(14px / var(--devicePixelRatio));
+  height: calc(50px / var(--devicePixelRatio));
+  border-radius: calc(4px / var(--devicePixelRatio));
+  margin-bottom: calc(10px / var(--devicePixelRatio));
+  padding-inline: calc(5px / var(--devicePixelRatio));
+  color: var(--filenameFont);
+  background-color: var(--filenameBackground);
+}
+
+#filename:focus {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
+}
