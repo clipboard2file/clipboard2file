@@ -10,17 +10,18 @@ async function handleClick(e) {
 
     const clipboardItems = await navigator.clipboard.read();
 
-    // At some point we should handle multiple images being in the clipboard, which is possible apparently
+    // At some point we should handle multiple images being in the clipboard, which is possible.
     const clipboardImageItem = clipboardItems.find((item) => item.types.includes("image/png"));
 
     if (!clipboardImageItem) return e.target.showPicker();
 
-    const clipboardImage = await clipboardImageItem.getType("image/png");
-    const shadowStyleRequest = await fetch(browser.runtime.getURL(`content_script/frame.css`));
-    const iframeRequest = await fetch(browser.runtime.getURL(`content_script/iframe.html`));
-    const iframeStyleRequest = await fetch(browser.runtime.getURL(`content_script/iframe.css`));
-
-    const settings = await browser.storage.local.get(["showFilenameBox", "clearOnPaste", "defaultFilename"]);
+    const [clipboardImage, shadowStyleRequest, iframeRequest, iframeStyleRequest, settings] = await Promise.all([
+      clipboardImageItem.getType("image/png"),
+      fetch(browser.runtime.getURL(`content_script/frame.css`)),
+      fetch(browser.runtime.getURL(`content_script/iframe.html`)),
+      fetch(browser.runtime.getURL(`content_script/iframe.css`)),
+      browser.storage.local.get(["showFilenameBox", "clearOnPaste", "defaultFilename"]),
+    ]);
 
     const aside = document.createElement("aside");
     const iframe = document.createElement("iframe");
@@ -55,7 +56,7 @@ async function handleClick(e) {
 
     document.documentElement.appendChild(aside);
 
-    await new Promise((resolve) => iframe.addEventListener("load", resolve, { once: true }));
+    await new Promise((resolve) => iframe.contentWindow.addEventListener("DOMContentLoaded", resolve, { once: true }));
 
     iframe.contentDocument.body.appendChild(iframeStyleElement);
 
@@ -74,10 +75,9 @@ async function handleClick(e) {
 
     if (!settings.showFilenameBox) filenameInput.style.display = "none";
 
-    const previewImage = new Image();
+    const previewImage = new iframe.contentWindow.Image();
     previewImage.src = URL.createObjectURL(clipboardImage);
     preview.style.backgroundImage = `url(${previewImage.src})`;
-    await previewImage.decode();
 
     iframe.contentDocument.body.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
     root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
@@ -123,15 +123,16 @@ async function handleClick(e) {
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
 
+    if (settings.showFilenameBox) filenameInput.focus();
+    else iframe.contentDocument.body.focus({ preventScroll: true });
+
     iframe.contentDocument.addEventListener("blur", () => {
-      root.style.setProperty("opacity", "0", "important");
       aside.remove();
       exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
       exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
     });
 
-    iframe.contentDocument.body.focus({ preventScroll: true });
-    if (settings.showFilenameBox) filenameInput.focus();
+    await previewImage.decode();
 
     root.style.animationName = "finished";
   }
