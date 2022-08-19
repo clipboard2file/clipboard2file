@@ -17,26 +17,24 @@ async function handleClick(e) {
 
     const [clipboardImage, shadowStyleRequest, iframeRequest, iframeStyleRequest, settings] = await Promise.all([
       clipboardImageItem.getType("image/png"),
-      fetch(browser.runtime.getURL(`content_script/frame.css`)),
-      fetch(browser.runtime.getURL(`content_script/iframe.html`)),
-      fetch(browser.runtime.getURL(`content_script/iframe.css`)),
+      fetch(browser.runtime.getURL(`content_script/shadow.css`)),
+      fetch(browser.runtime.getURL(`content_script/popup.html`)),
+      fetch(browser.runtime.getURL(`content_script/popup.css`)),
       browser.storage.local.get(["showFilenameBox", "clearOnPaste", "defaultFilename"]),
     ]);
 
     const aside = document.createElement("aside");
     const iframe = document.createElement("iframe");
+    const root = document.createElement("div");
     const shadow = aside.attachShadow({ mode: "closed" });
 
     const shadowStyleElement = document.createElement("style");
-    const iframeStyleElement = document.createElement("style");
-
-    const root = document.createElement("div");
-
     shadowStyleElement.textContent = await shadowStyleRequest.text();
-    iframeStyleElement.textContent = await iframeStyleRequest.text();
-    iframe.srcdoc = await iframeRequest.text();
+
     shadow.appendChild(shadowStyleElement);
     shadow.append(root);
+
+    iframe.srcdoc = await iframeRequest.text();
     root.appendChild(iframe);
 
     const modalWidth = 250 / window.devicePixelRatio;
@@ -58,6 +56,8 @@ async function handleClick(e) {
 
     await new Promise((resolve) => iframe.contentWindow.addEventListener("DOMContentLoaded", resolve, { once: true }));
 
+    const iframeStyleElement = iframe.contentDocument.createElement("style");
+    iframeStyleElement.textContent = await iframeStyleRequest.text();
     iframe.contentDocument.body.appendChild(iframeStyleElement);
 
     const preview = iframe.contentDocument.getElementById("preview");
@@ -69,11 +69,13 @@ async function handleClick(e) {
     else if (settings.defaultFilename === "unknown") defaultFilename = "unknown";
     else defaultFilename = generateFilename();
 
-    filenameInput.value = `${defaultFilename}.png`;
-    filenameInput.setAttribute("placeholder", `${defaultFilename}.png`);
-    filenameInput.setSelectionRange(0, defaultFilename.length);
-
-    if (!settings.showFilenameBox) filenameInput.style.display = "none";
+    if (settings.showFilenameBox) {
+      filenameInput.setAttribute("placeholder", `${defaultFilename}.png`);
+      filenameInput.value = `${defaultFilename}.png`;
+      filenameInput.setSelectionRange(0, defaultFilename.length);
+    } else {
+      filenameInput.style.display = "none";
+    }
 
     const previewImage = new iframe.contentWindow.Image();
     previewImage.src = URL.createObjectURL(clipboardImage);
@@ -123,8 +125,7 @@ async function handleClick(e) {
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
 
-    if (settings.showFilenameBox) filenameInput.focus();
-    else iframe.contentDocument.body.focus({ preventScroll: true });
+    await previewImage.decode();
 
     iframe.contentDocument.addEventListener("blur", () => {
       aside.remove();
@@ -132,7 +133,8 @@ async function handleClick(e) {
       exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
     });
 
-    await previewImage.decode();
+    if (settings.showFilenameBox) filenameInput.focus();
+    else iframe.contentDocument.body.focus({ preventScroll: true });
 
     root.style.animationName = "finished";
   }
