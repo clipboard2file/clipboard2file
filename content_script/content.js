@@ -1,5 +1,5 @@
-let clientX;
-let clientY;
+let clientX = 0;
+let clientY = 0;
 
 async function handleClick(e) {
   if (e.target.matches("input[type=file]:not([webkitdirectory])")) {
@@ -41,18 +41,24 @@ async function handleClick(e) {
     const modalHeight = 200 / window.devicePixelRatio;
 
     if (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - modalWidth) {
-      root.style.left = clientX + window.visualViewport.pageLeft + "px";
+      root.style.left = clientX + "px";
     } else {
-      root.style.left = window.visualViewport.width + window.visualViewport.pageLeft - modalWidth + "px";
+      root.style.left = window.visualViewport.width - modalWidth + "px";
     }
 
     if (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - modalHeight) {
-      root.style.top = clientY + window.visualViewport.pageTop + "px";
+      root.style.top = clientY + "px";
     } else {
-      root.style.top = clientY + window.visualViewport.pageTop - modalHeight + "px";
+      root.style.top = clientY - modalHeight + "px";
     }
 
-    document.documentElement.appendChild(aside);
+    // <dialog> elements appear on top of everything else in the web page,
+    // regardless of the z-index of other elements,
+    // so to keep the popup visible, we append it to the dialog instead of the root.
+    const closestDialog = e.target.closest("dialog[open]");
+
+    if (closestDialog) closestDialog.appendChild(aside);
+    else document.documentElement.appendChild(aside);
 
     await new Promise((resolve) => iframe.contentWindow.addEventListener("DOMContentLoaded", resolve, { once: true }));
 
@@ -136,7 +142,11 @@ async function handleClick(e) {
     if (settings.showFilenameBox) filenameInput.focus();
     else iframe.contentDocument.body.focus({ preventScroll: true });
 
-    root.style.animationName = "finished";
+    root.animate([{ transform: "translateY(calc(-20px / var(--devicePixelRatio)))" }, { opacity: "1", pointerEvents: "initial" }], {
+      duration: 140,
+      fill: "forwards",
+      easing: "cubic-bezier(0, 0, 0, 1)",
+    });
   }
 }
 
