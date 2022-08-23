@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>test page</title>
+    <link rel="shortcut icon" type="image/png" href="./icons/clipboard2file.png" />
+    <script>
+      Element.prototype._attachShadow = Element.prototype.attachShadow;
+      Element.prototype.attachShadow = function () {
+        return this._attachShadow({ mode: "open" });
+      };
+    </script>
+    <style>
+      html,
+      body {
+        width: calc(100% * 2);
+        height: calc(100% * 2);
+        margin: 0;
+        box-sizing: border-box;
+        color: white;
+      }
+
+      input {
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        border: 8px red dashed;
+        appearance: none;
+      }
+
+      input:focus {
+        border-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="testSpace" type="file" tabindex="-1" autofocus="true" />
+  </body>
+</html>

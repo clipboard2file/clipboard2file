@@ -15,28 +15,15 @@ div {
 }
 
 div {
-  position: absolute;
+  position: fixed;
   width: calc(250px / var(--devicePixelRatio));
   height: calc(200px / var(--devicePixelRatio));
   opacity: 0;
   pointer-events: none;
   z-index: 2147483647;
-  animation-duration: 145ms;
-  animation-timing-function: cubic-bezier(0, 0, 0, 1);
-  animation-fill-mode: forwards;
   background-color: var(--popupBackground);
   border: calc(1px / var(--devicePixelRatio)) var(--popupBorder) solid;
   border-radius: calc(8px / var(--devicePixelRatio));
   box-shadow: 0 calc(2px / var(--devicePixelRatio)) calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
-}
-
-@keyframes finished {
-  from {
-    transform: translateY(calc(-20px / var(--devicePixelRatio)));
-  }
-  to {
-    opacity: 1;
-    pointer-events: initial;
-  }
 }
