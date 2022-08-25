@@ -16,6 +16,8 @@ div {
 
 div {
   position: fixed;
+  top: var(--posY);
+  left: var(--posX);
   width: calc(250px / var(--devicePixelRatio));
   height: calc(200px / var(--devicePixelRatio));
   opacity: 0;

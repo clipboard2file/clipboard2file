@@ -40,16 +40,19 @@ async function handleClick(e) {
     const modalWidth = 250 / window.devicePixelRatio;
     const modalHeight = 200 / window.devicePixelRatio;
 
-    if (clientX + window.visualViewport.pageLeft < window.visualViewport.width + window.visualViewport.pageLeft - modalWidth) {
-      root.style.left = clientX + "px";
+    if (clientX + window.visualViewport.pageLeft < window.visualViewport.width * window.visualViewport.scale + window.visualViewport.pageLeft - modalWidth) {
+      root.style.setProperty("--posX", `${(100 * clientX) / (window.visualViewport.width * window.visualViewport.scale)}%`);
     } else {
-      root.style.left = window.visualViewport.width - modalWidth + "px";
+      root.style.setProperty(
+        "--posX",
+        `${(100 * (window.visualViewport.width * window.visualViewport.scale - modalWidth)) / (window.visualViewport.width * window.visualViewport.scale)}%`
+      );
     }
 
-    if (clientY + window.visualViewport.pageTop < window.visualViewport.height + window.visualViewport.pageTop - modalHeight) {
-      root.style.top = clientY + "px";
+    if (clientY + window.visualViewport.pageTop < window.visualViewport.height * window.visualViewport.scale + window.visualViewport.pageTop - modalHeight) {
+      root.style.setProperty("--posY", `${(100 * clientY) / (window.visualViewport.height * window.visualViewport.scale)}%`);
     } else {
-      root.style.top = clientY - modalHeight + "px";
+      root.style.setProperty("--posY", `${(100 * (clientY - modalHeight)) / (window.visualViewport.height * window.visualViewport.scale)}%`);
     }
 
     // <dialog> elements appear on top of everything else in the web page,
@@ -87,21 +90,32 @@ async function handleClick(e) {
     previewImage.src = URL.createObjectURL(clipboardImage);
     preview.style.backgroundImage = `url(${previewImage.src})`;
 
-    iframe.contentDocument.body.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
+    iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio);
     root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
 
-    iframe.contentDocument.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") iframe.contentDocument.dispatchEvent(new Event("blur"));
-    });
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-    filenameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") preview.dispatchEvent(new Event("click"));
-    });
+    iframe.contentDocument.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key === "Escape") iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
+      },
+      { signal }
+    );
+
+    filenameInput.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key === "Enter") preview.dispatchEvent(new Event("click"));
+      },
+      { signal }
+    );
 
     preview.addEventListener(
       "click",
       async () => {
-        iframe.contentDocument.dispatchEvent(new Event("blur"));
+        iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
         if (settings.clearOnPaste) await navigator.clipboard.writeText("");
 
         const dataTransfer = new DataTransfer();
@@ -116,16 +130,26 @@ async function handleClick(e) {
         e.target.dispatchEvent(new Event("input", { bubbles: true }));
         e.target.dispatchEvent(new Event("change", { bubbles: true }));
       },
-      { once: true }
+      { signal, once: true }
     );
 
     selectAll.addEventListener(
       "click",
       () => {
-        iframe.contentDocument.dispatchEvent(new Event("blur"));
+        iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
         e.target.showPicker();
       },
-      { once: true }
+      { signal, once: true }
+    );
+
+    window.addEventListener(
+      "resize",
+      () => {
+        console.log("resized");
+        iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio);
+        root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
+      },
+      { signal }
     );
 
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
@@ -133,11 +157,16 @@ async function handleClick(e) {
 
     await previewImage.decode();
 
-    iframe.contentDocument.addEventListener("blur", () => {
-      aside.remove();
-      exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
-      exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
-    });
+    iframe.contentDocument.addEventListener(
+      "blur",
+      (e) => {
+        controller.abort();
+        aside.remove();
+        exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
+        exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
+      },
+      { signal, once: true }
+    );
 
     if (settings.showFilenameBox) filenameInput.focus();
     else iframe.contentDocument.body.focus({ preventScroll: true });
