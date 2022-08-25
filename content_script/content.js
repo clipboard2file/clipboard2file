@@ -145,7 +145,6 @@ async function handleClick(e) {
     window.addEventListener(
       "resize",
       () => {
-        console.log("resized");
         iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio);
         root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
       },
