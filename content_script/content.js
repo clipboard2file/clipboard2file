@@ -151,6 +151,8 @@ async function handleClick(e) {
       { signal }
     );
 
+    window.addEventListener("visibilitychange", () => iframe.contentDocument.dispatchEvent(new FocusEvent("blur")), { signal });
+
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
     exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
 
