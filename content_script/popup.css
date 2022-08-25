@@ -30,6 +30,7 @@ body {
 button,
 input {
   border: none;
+  padding-block: 0px;
   border-radius: calc(4px / var(--devicePixelRatio));
 }
 
@@ -41,6 +42,7 @@ button {
   color: var(--filenameFont);
   background-color: var(--filenameBackground);
   height: calc(50px / var(--devicePixelRatio));
+  padding: calc(1px / var(--devicePixelRatio));
   font-size: calc(14px / var(--devicePixelRatio));
   margin-bottom: calc(10px / var(--devicePixelRatio));
   padding-inline: calc(5px / var(--devicePixelRatio));
