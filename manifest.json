@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "default_locale": "en",
   "name": "Clipboard2File",
-  "version": "2.9",
+  "version": "3.0",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "/icons/clipboard2file.png"
