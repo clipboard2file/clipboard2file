@@ -25,7 +25,7 @@ async function handleClick(e) {
 
     const aside = document.createElement("aside");
     const iframe = document.createElement("iframe");
-    const root = document.createElement("div");
+    const root = document.createElement("dialog");
     const shadow = aside.attachShadow({ mode: "closed" });
 
     const shadowStyleElement = document.createElement("style");
@@ -55,13 +55,7 @@ async function handleClick(e) {
       root.style.setProperty("--posY", `${(100 * (clientY - modalHeight)) / (window.visualViewport.height * window.visualViewport.scale)}%`);
     }
 
-    // <dialog> elements appear on top of everything else in the web page,
-    // regardless of the z-index of other elements,
-    // so to keep the popup visible, we append it to the dialog instead of the root.
-    const closestDialog = e.target.closest("dialog[open]");
-
-    if (closestDialog) closestDialog.appendChild(aside);
-    else document.documentElement.appendChild(aside);
+    document.documentElement.appendChild(aside);
 
     await new Promise((resolve) => iframe.contentWindow.addEventListener("DOMContentLoaded", resolve, { once: true }));
 
@@ -89,6 +83,8 @@ async function handleClick(e) {
     const previewImage = new iframe.contentWindow.Image();
     previewImage.src = URL.createObjectURL(clipboardImage);
     preview.style.backgroundImage = `url(${previewImage.src})`;
+
+    selectAll.textContent = browser.i18n.getMessage("showAllFiles", "Show all files");
 
     iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio);
     root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
@@ -153,9 +149,6 @@ async function handleClick(e) {
 
     window.addEventListener("visibilitychange", () => iframe.contentDocument.dispatchEvent(new FocusEvent("blur")), { signal });
 
-    exportFunction(() => {}, HTMLElement.prototype, { defineAs: "blur" });
-    exportFunction(() => {}, HTMLElement.prototype, { defineAs: "focus" });
-
     await previewImage.decode();
 
     iframe.contentDocument.addEventListener(
@@ -163,14 +156,14 @@ async function handleClick(e) {
       (e) => {
         controller.abort();
         aside.remove();
-        exportFunction(HTMLElement.prototype.blur, HTMLElement.prototype, { defineAs: "blur" });
-        exportFunction(HTMLElement.prototype.focus, HTMLElement.prototype, { defineAs: "focus" });
       },
       { signal, once: true }
     );
 
     if (settings.showFilenameBox) filenameInput.focus();
     else iframe.contentDocument.body.focus({ preventScroll: true });
+
+    root.showModal();
 
     root.animate([{ transform: "translateY(calc(-20px / var(--devicePixelRatio)))" }, { opacity: "1", pointerEvents: "initial" }], {
       duration: 140,
