@@ -165,10 +165,20 @@ async function handleClick(e) {
 
     root.showModal();
 
-    root.animate([{ transform: "translateY(calc(-20px / var(--devicePixelRatio)))" }, { opacity: "1", pointerEvents: "initial" }], {
-      duration: 140,
+    const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let keyframes = [{ transform: "skew(2deg, 1deg) scale(0.95)" }, { opacity: "1", pointerEvents: "initial" }],
+      easing = "cubic-bezier(.07, .95, 0, 1)",
+      duration = 270;
+
+    if (prefersReducedMotion) {
+      (easing = "cubic-bezier(0, 0, 0, 1)"), (duration = 150);
+      keyframes.shift();
+    }
+
+    root.animate(keyframes, {
+      duration,
       fill: "forwards",
-      easing: "cubic-bezier(0, 0, 0, 1)",
+      easing,
     });
   }
 }
