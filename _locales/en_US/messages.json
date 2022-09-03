@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Show all files"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Clear clipboard on paste?"
+  },
+  "showFilenameBox": {
+    "message": "Show text box for editing file name?"
+  },
+  "defaultFilename": {
+    "message": "What should the default file name be?"
+  },
+  "true": { "message": "Yes" },
+  "false": { "message": "No" },
+  "formattedTime": { "message": "Formatted Time" },
+  "unixTimestamp": { "message": "UNIX Timestamp" }
 }

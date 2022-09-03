@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Pokaż wszystkie pliki"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Czyszczenie schowka przy wklejaniu?"
+  },
+  "showFilenameBox": {
+    "message": "Pokazać pole tekstowe do edycji nazwy pliku?"
+  },
+  "defaultFilename": {
+    "message": "Jaka powinna być domyślna nazwa pliku?"
+  },
+  "true": { "message": "Tak" },
+  "false": { "message": "Nie" },
+  "formattedTime": { "message": "Czas sformatowany" },
+  "unixTimestamp": { "message": "Surowy znacznik czasu" }
 }

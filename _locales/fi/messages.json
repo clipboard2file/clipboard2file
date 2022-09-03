@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Näytä kaikki tiedostot"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Tyhjennä leikepöytä liitäessä?"
+  },
+  "showFilenameBox": {
+    "message": "Näytä tekstiruutu tiedostonimen muokkausta varten?"
+  },
+  "defaultFilename": {
+    "message": "Mikä olisi oletustiedoston nimi?"
+  },
+  "true": { "message": "Kyllä" },
+  "false": { "message": "Ei" },
+  "formattedTime": { "message": "Muotoiltu aika" },
+  "unixTimestamp": { "message": "UNIX Aikaleima" }
 }

@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Alle Dateien anzeigen"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Zwischenablage beim Einfügen löschen?"
+  },
+  "showFilenameBox": {
+    "message": "Textfeld zum Bearbeiten des Dateinamens anzeigen?"
+  },
+  "defaultFilename": {
+    "message": "Wie soll der Standard-Dateiname lauten?"
+  },
+  "true": { "message": "Ja" },
+  "false": { "message": "Nein" },
+  "formattedTime": { "message": "Formatierte Zeit" },
+  "unixTimestamp": { "message": "UNIX-Zeitstempel" }
 }

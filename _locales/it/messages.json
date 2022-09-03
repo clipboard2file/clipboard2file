@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Mostra tutti i file"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Cancellare gli appunti quando si incolla?"
+  },
+  "showFilenameBox": {
+    "message": "Mostrare la casella di testo per la modifica del nome del file?"
+  },
+  "defaultFilename": {
+    "message": "Quale dovrebbe essere il nome predefinito del file?"
+  },
+  "true": { "message": "Sì" },
+  "false": { "message": "No" },
+  "formattedTime": { "message": "Tempo formattato" },
+  "unixTimestamp": { "message": "Tempo grezzo" }
 }

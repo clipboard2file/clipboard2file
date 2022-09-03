@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Mostrar todos los archivos"
-  }
+  },
+  "clearOnPaste": {
+    "message": "¿Borrar el portapapeles al pegar?"
+  },
+  "showFilenameBox": {
+    "message": "¿Mostrar cuadro de texto para editar el nombre del archivo?"
+  },
+  "defaultFilename": {
+    "message": "¿Cuál debe ser el nombre del archivo por defecto?"
+  },
+  "true": { "message": "Sí" },
+  "false": { "message": "No" },
+  "formattedTime": { "message": "Tiempo formateado" },
+  "unixTimestamp": { "message": "Marca de tiempo UNIX" }
 }
