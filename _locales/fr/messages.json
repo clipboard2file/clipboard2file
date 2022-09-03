@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Afficher tous les fichiers"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Effacer le presse-papiers lors du collage ?"
+  },
+  "showFilenameBox": {
+    "message": "Afficher la zone de texte pour l'édition du nom du fichier ?"
+  },
+  "defaultFilename": {
+    "message": "Quel doit être le nom du fichier par défaut ?"
+  },
+  "true": { "message": "Oui" },
+  "false": { "message": "Non" },
+  "formattedTime": { "message": "Heure formatée" },
+  "unixTimestamp": { "message": "Horodatage UNIX" }
 }

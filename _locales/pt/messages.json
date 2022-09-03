@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Mostrar todos os ficheiros"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Papel de arquivo transparente em pasta?"
+  },
+  "showFilenameBox": {
+    "message": "Mostrar caixa de texto para editar o nome do ficheiro?"
+  },
+  "defaultFilename": {
+    "message": "Qual deve ser o nome do ficheiro por defeito?"
+  },
+  "true": { "message": "Sim" },
+  "false": { "message": "Não" },
+  "formattedTime": { "message": "Tempo formatado" },
+  "unixTimestamp": { "message": "Carimbo de tempo em bruto" }
 }

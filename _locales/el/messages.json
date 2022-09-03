@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Εμφάνιση όλων των αρχείων"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Εκκαθάριση πρόχειρου κατά την επικόλληση;"
+  },
+  "showFilenameBox": {
+    "message": "Εμφάνιση πλαισίου κειμένου για την επεξεργασία του ονόματος αρχείου;"
+  },
+  "defaultFilename": {
+    "message": "Ποιο θα πρέπει να είναι το προεπιλεγμένο όνομα αρχείου;"
+  },
+  "true": { "message": "Ναι" },
+  "false": { "message": "Όχι" },
+  "formattedTime": { "message": "Μορφοποιημένος χρόνος" },
+  "unixTimestamp": { "message": "Χρονοσφραγίδα UNIX" }
 }

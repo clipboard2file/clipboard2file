@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Prikaži vse datoteke"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Izbriši odložišče pri prilepljanju?"
+  },
+  "showFilenameBox": {
+    "message": "Prikaži besedilno polje za urejanje imena datoteke?"
+  },
+  "defaultFilename": {
+    "message": "Kakšno naj bo privzeto ime datoteke?"
+  },
+  "true": { "message": "Da" },
+  "false": { "message": "Ne" },
+  "formattedTime": { "message": "Formatiran čas" },
+  "unixTimestamp": { "message": "Surovi časovni žig" }
 }

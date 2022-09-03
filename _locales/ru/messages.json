@@ -1,5 +1,18 @@
 {
   "showAllFiles": {
     "message": "Показать все файлы"
-  }
+  },
+  "clearOnPaste": {
+    "message": "Очистить буфер обмена при вставке?"
+  },
+  "showFilenameBox": {
+    "message": "Показать текстовое поле для редактирования имени файла?"
+  },
+  "defaultFilename": {
+    "message": "Каким должно быть имя файла по умолчанию?"
+  },
+  "true": { "message": "Да" },
+  "false": { "message": "Нет" },
+  "formattedTime": { "message": "Форматированное время" },
+  "unixTimestamp": { "message": "Необработанная метка времени" }
 }
