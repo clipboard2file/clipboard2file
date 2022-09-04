@@ -166,12 +166,12 @@ async function handleClick(e) {
     root.showModal();
 
     const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let keyframes = [{ transform: "skew(2deg, 1deg) scale(0.95)" }, { opacity: "1", pointerEvents: "initial" }],
+    let keyframes = [{ transform: "skew(2deg, 1deg) scale(0.93)" }, { opacity: "1", pointerEvents: "initial" }],
       easing = "cubic-bezier(.07, .95, 0, 1)",
       duration = 270;
 
     if (prefersReducedMotion) {
-      (easing = "cubic-bezier(0, 0, 0, 1)"), (duration = 150);
+      (easing = "cubic-bezier(0, 0, 0, 1)"), (duration = 125);
       keyframes.shift();
     }
 
