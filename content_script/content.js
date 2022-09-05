@@ -57,6 +57,8 @@ async function handleClick(e) {
 
     document.documentElement.appendChild(aside);
 
+    root.showModal();
+
     await new Promise((resolve) => iframe.contentWindow.addEventListener("DOMContentLoaded", resolve, { once: true }));
 
     const iframeStyleElement = iframe.contentDocument.createElement("style");
@@ -163,8 +165,6 @@ async function handleClick(e) {
     if (settings.showFilenameBox) filenameInput.focus();
     else iframe.contentDocument.body.focus({ preventScroll: true });
 
-    root.showModal();
-
     const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
     let keyframes = [{ transform: "skew(2deg, 1deg) scale(0.93)" }, { opacity: "1", pointerEvents: "initial" }],
       easing = "cubic-bezier(.07, .95, 0, 1)",
@@ -186,7 +186,7 @@ async function handleClick(e) {
 window.addEventListener("click", handleClick);
 document.addEventListener("pointerup", (e) => ((clientX = e.clientX), (clientY = e.clientY)), { passive: true });
 
-// fix for extension not working on tinypng.com or any other website that stops propagation of input events.
+// Let the extension work on pages that stop propagation of input events (tinypng.com, etc.)
 exportFunction(
   function () {
     this.stopPropagation();
