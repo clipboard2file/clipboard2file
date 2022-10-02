@@ -1,0 +1,91 @@
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  text-rendering: optimizeLegibility;
+}
+
+:root {
+  --selectAll: rgb(0, 221, 255);
+  --selectAllHover: rgb(128, 235, 255);
+  --selectAllFont: rgb(21, 20, 26);
+  --filenameFocus: rgb(53, 132, 228);
+  --filenameFont: rgb(251, 251, 254);
+  --filenameBackground: rgb(28, 27, 34);
+  --selectAllActive: rgb(170, 242, 255);
+}
+
+body {
+  display: flex;
+  flex-flow: column;
+  padding: calc(8px / var(--devicePixelRatio));
+}
+
+button,
+input {
+  border: none;
+  padding-block: 0px;
+  border-radius: calc(4px / var(--devicePixelRatio));
+}
+
+button {
+  outline-offset: calc(2px / var(--devicePixelRatio));
+}
+
+#filename {
+  color: var(--filenameFont);
+  background-color: var(--filenameBackground);
+  height: calc(50px / var(--devicePixelRatio));
+  padding: calc(1px / var(--devicePixelRatio));
+  font-size: calc(14px / var(--devicePixelRatio));
+  margin-bottom: calc(10px / var(--devicePixelRatio));
+  padding-inline: calc(5px / var(--devicePixelRatio));
+}
+
+#preview {
+  width: 100%;
+  height: 100%;
+  background-color: unset;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#selectAll {
+  font: menu;
+  font-weight: 600;
+  font-size: calc(12px / var(--devicePixelRatio));
+  margin-top: calc(10px / var(--devicePixelRatio));
+  min-height: calc(32px / var(--devicePixelRatio));
+  background-color: var(--selectAll);
+}
+
+#filename:focus {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
+}
+
+#preview:is(:hover, :focus-within) {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+}
+
+#preview:focus {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAllHover);
+}
+
+#selectAll:hover {
+  background-color: var(--selectAllHover);
+}
+
+#selectAll:active {
+  background-color: var(--selectAllActive);
+}
+
+#selectAll:focus-visible {
+  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+}
