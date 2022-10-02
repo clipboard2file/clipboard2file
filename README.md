@@ -22,6 +22,6 @@
 />
 </div>
 
-***
+---
 
 <p align="center">Clipboard2File is a tiny extension that lets you use an image on your clipboard as a file!</p>
