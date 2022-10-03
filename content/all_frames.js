@@ -6,10 +6,12 @@ async function handleClick(event) {
     event.preventDefault();
 
     // Fall back to default behavior (inscure context, user forgot to set dom.events.asyncClipboard.clipboardItem to true in about:config, etc.)
-    if (!navigator.clipboard?.read) return e.target.showPicker();
+    if (!navigator.clipboard?.read) return event.target.showPicker();
 
     const clipboardItems = await navigator.clipboard.read();
-    const clipboardImageItem = clipboardItems.find((item) => item.types.includes("image/png"));
+    const clipboardImageItem = clipboardItems.find((item) =>
+      item.types.includes("image/png")
+    );
 
     if (!clipboardImageItem) return event.target.showPicker();
 
@@ -24,7 +26,12 @@ async function handleClick(event) {
       inputAttributes[attr.name] = { name: attr.name, value: attr.value };
     }
 
-    return browser.runtime.sendMessage({ type: "click", token, inputAttributes, clipboardImage });
+    return browser.runtime.sendMessage({
+      type: "click",
+      token,
+      inputAttributes,
+      clipboardImage,
+    });
   }
 }
 
