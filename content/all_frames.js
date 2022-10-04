@@ -5,20 +5,15 @@ async function handleClick(event) {
   if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
     event.preventDefault();
 
-    // Fall back to default behavior (inscure context, user forgot to set dom.events.asyncClipboard.clipboardItem to true in about:config, etc.)
-    if (!navigator.clipboard?.read) return event.target.showPicker();
+    // Reading the clipboard via the background page allows the add-on to work in non-secure contexts
+    // https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts
+    const clipboardImage = await browser.runtime.sendMessage({ type: "clipboardImage" });
 
-    const clipboardItems = await navigator.clipboard.read();
-    const clipboardImageItem = clipboardItems.find((item) =>
-      item.types.includes("image/png")
-    );
+    if (!clipboardImage) return event.target.showPicker();
 
-    if (!clipboardImageItem) return event.target.showPicker();
-
-    token = crypto.randomUUID();
+    // Again, non-secure contexts...
+    token = await browser.runtime.sendMessage({ type: "randomUUID" });
     clicked = event.target;
-
-    const clipboardImage = await clipboardImageItem.getType("image/png");
 
     const inputAttributes = {};
 
@@ -26,12 +21,7 @@ async function handleClick(event) {
       inputAttributes[attr.name] = { name: attr.name, value: attr.value };
     }
 
-    return browser.runtime.sendMessage({
-      type: "click",
-      token,
-      inputAttributes,
-      clipboardImage,
-    });
+    return browser.runtime.sendMessage({ type: "click", token, inputAttributes, clipboardImage });
   }
 }
 
