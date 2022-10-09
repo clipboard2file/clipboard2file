@@ -3,7 +3,7 @@
     "message": "Show all files"
   },
   "clearOnPaste": {
-    "message": "Clear clipboard on paste?"
+    "message": "Clear clipboard after pasting?"
   },
   "showFilenameBox": {
     "message": "Show text box for editing file name?"

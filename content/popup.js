@@ -105,7 +105,7 @@ export async function popup(data) {
     "click",
     async () => {
       iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
-      if (settings.clearOnPaste) await navigator.clipboard.writeText("");
+      if (settings.clearOnPaste) browser.runtime.sendMessage({ type: "clearClipboard" });
 
       const dataTransfer = new DataTransfer();
 
@@ -161,20 +161,16 @@ export async function popup(data) {
     { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
     { opacity: "1", pointerEvents: "initial" },
   ];
-
-  let easing = "cubic-bezier(.07, .95, 0, 1)";
   let duration = 270;
+  let fill = "forwards";
+  let easing = "cubic-bezier(.07, .95, 0, 1)";
 
   if (prefersReducedMotion) {
     (easing = "cubic-bezier(0, 0, 0, 1)"), (duration = 150);
     keyframes.shift();
   }
 
-  root.animate(keyframes, {
-    duration,
-    fill: "forwards",
-    easing,
-  });
+  root.animate(keyframes, { duration, fill, easing });
 
   function showPicker() {
     const decoyInput = document.createElement("input");

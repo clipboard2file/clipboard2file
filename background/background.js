@@ -2,9 +2,6 @@ const { runtime, tabs } = browser;
 
 runtime.onMessage.addListener((data, sender) => {
   const actions = {
-    randomUUID: function () {
-      return crypto.randomUUID();
-    },
     click: function () {
       return tabs.sendMessage(sender.tab.id, {
         type: "modal",
@@ -14,9 +11,6 @@ runtime.onMessage.addListener((data, sender) => {
         token: data.token,
         clipboardImage: data.clipboardImage,
       });
-    },
-    file: function () {
-      return tabs.sendMessage(sender.tab.id, { type: "fileChanged", token: data.token, files: data.files }, { frameId: data.frameId });
     },
     clipboardImage: async function () {
       // User forgot to set dom.events.asyncClipboard.clipboardItem to true in about:config
@@ -28,6 +22,17 @@ runtime.onMessage.addListener((data, sender) => {
       if (!imageItem) return null;
 
       return await imageItem.getType("image/png");
+    },
+    randomUUID: function () {
+      return crypto.randomUUID();
+    },
+    clearClipboard: async function () {
+      // User forgot to set dom.events.asyncClipboard.clipboardItem to true in about:config
+      if (!navigator.clipboard?.writeText) return null;
+      return await navigator.clipboard.writeText("");
+    },
+    file: function () {
+      return tabs.sendMessage(sender.tab.id, { type: "fileChanged", token: data.token, files: data.files }, { frameId: data.frameId });
     },
   };
 
