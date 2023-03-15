@@ -23,13 +23,16 @@ runtime.onMessage.addListener((data, sender) => {
 
       return await imageItem.getType("image/png");
     },
-    randomUUID: function () {
+    randomUUID: async function () {
       return crypto.randomUUID();
     },
     clearClipboard: async function () {
       // User forgot to set dom.events.asyncClipboard.clipboardItem to true in about:config
       if (!navigator.clipboard?.writeText) return null;
       return await navigator.clipboard.writeText("");
+    },
+    backgroundDevicePixelRatio: async function () {
+      return window.devicePixelRatio;
     },
     file: function () {
       return tabs.sendMessage(sender.tab.id, { type: "fileChanged", token: data.token, files: data.files }, { frameId: data.frameId });

@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "default_locale": "en",
   "name": "Clipboard2File",
-  "version": "3.4",
+  "version": "3.5",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "./icons/clipboard2file.png"
@@ -12,7 +12,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "strict_min_version": "102.0"
+      "strict_min_version": "110.0"
     }
   },
   "permissions": ["<all_urls>", "clipboardRead", "clipboardWrite", "storage"],
