@@ -25,31 +25,17 @@ export async function popup(data) {
   dialog.append(root);
   root.appendChild(iframe);
 
-  dialog.addEventListener(
-    "mouseover",
-    (mouseover) => {
-      if (mouseover.clientX + window.visualViewport.pageLeft < window.visualViewport.width * window.visualViewport.scale + window.visualViewport.pageLeft - modalWidth) {
-        root.style.setProperty("--posX", `${(100 * mouseover.clientX) / (window.visualViewport.width * window.visualViewport.scale)}%`);
-      } else {
-        root.style.setProperty("--posX", `${(100 * (window.visualViewport.width * window.visualViewport.scale - modalWidth)) / (window.visualViewport.width * window.visualViewport.scale)}%`);
-      }
+  const backgroundDevicePixelRatio = await browser.runtime.sendMessage({ type: "backgroundDevicePixelRatio" });
 
-      if (mouseover.clientY + window.visualViewport.pageTop < window.visualViewport.height * window.visualViewport.scale + window.visualViewport.pageTop - modalHeight) {
-        root.style.setProperty("--posY", `${(100 * mouseover.clientY) / (window.visualViewport.height * window.visualViewport.scale)}%`);
-      } else {
-        root.style.setProperty("--posY", `${(100 * (mouseover.clientY - modalHeight)) / (window.visualViewport.height * window.visualViewport.scale)}%`);
-      }
-    },
-    { once: true }
-  );
-
-  const modalWidth = 250 / window.devicePixelRatio;
-  const modalHeight = 200 / window.devicePixelRatio;
+  const modalWidth = (250 * backgroundDevicePixelRatio) / window.devicePixelRatio;
+  const modalHeight = (200 * backgroundDevicePixelRatio) / window.devicePixelRatio;
 
   const controller = new AbortController();
   const signal = controller.signal;
 
   document.documentElement.appendChild(aside);
+
+  let mouseoverListener = new Promise((resolve) => dialog.addEventListener("mouseover", ({ clientX, clientY }) => resolve({ clientX, clientY }), { once: true }));
 
   dialog.showModal();
 
@@ -66,7 +52,7 @@ export async function popup(data) {
   let defaultFilename;
   if (settings.defaultFilename === "unix") defaultFilename = String(Date.now());
   else if (settings.defaultFilename === "unknown") defaultFilename = "unknown";
-  else defaultFilename = generateFilename();
+  else defaultFilename = generateDefaultFilename();
 
   if (settings.showFilenameBox) {
     filenameInput.setAttribute("placeholder", `${defaultFilename}.png`);
@@ -77,13 +63,13 @@ export async function popup(data) {
   }
 
   const previewImage = new iframe.contentWindow.Image();
-  previewImage.src = URL.createObjectURL(clipboardImage);
+  previewImage.src = iframe.contentWindow.URL.createObjectURL(clipboardImage);
   preview.style.backgroundImage = `url(${previewImage.src})`;
 
   selectAll.textContent = browser.i18n.getMessage("showAllFiles", "Show all files");
 
-  iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio);
-  root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
+  iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio / backgroundDevicePixelRatio);
+  root.style.setProperty("--devicePixelRatio", window.devicePixelRatio / backgroundDevicePixelRatio);
 
   iframe.contentDocument.addEventListener(
     "keydown",
@@ -133,8 +119,8 @@ export async function popup(data) {
   window.addEventListener(
     "resize",
     () => {
-      iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio);
-      root.style.setProperty("--devicePixelRatio", window.devicePixelRatio);
+      iframe.contentDocument.body.style.setProperty("--devicePixelRatio", window.devicePixelRatio / backgroundDevicePixelRatio);
+      root.style.setProperty("--devicePixelRatio", window.devicePixelRatio / backgroundDevicePixelRatio);
     },
     { signal }
   );
@@ -145,7 +131,7 @@ export async function popup(data) {
 
   iframe.contentDocument.addEventListener(
     "blur",
-    (e) => {
+    () => {
       controller.abort();
       aside.remove();
     },
@@ -154,6 +140,20 @@ export async function popup(data) {
 
   if (settings.showFilenameBox) filenameInput.focus();
   else iframe.contentDocument.body.focus({ preventScroll: true });
+
+  const mouseover = await mouseoverListener;
+
+  if (mouseover.clientX + window.visualViewport.pageLeft < window.visualViewport.width * window.visualViewport.scale + window.visualViewport.pageLeft - modalWidth) {
+    root.style.setProperty("--posX", `${(100 * mouseover.clientX) / (window.visualViewport.width * window.visualViewport.scale)}%`);
+  } else {
+    root.style.setProperty("--posX", `${(100 * (window.visualViewport.width * window.visualViewport.scale - modalWidth)) / (window.visualViewport.width * window.visualViewport.scale)}%`);
+  }
+
+  if (mouseover.clientY + window.visualViewport.pageTop < window.visualViewport.height * window.visualViewport.scale + window.visualViewport.pageTop - modalHeight) {
+    root.style.setProperty("--posY", `${(100 * mouseover.clientY) / (window.visualViewport.height * window.visualViewport.scale)}%`);
+  } else {
+    root.style.setProperty("--posY", `${(100 * (mouseover.clientY - modalHeight)) / (window.visualViewport.height * window.visualViewport.scale)}%`);
+  }
 
   const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -175,8 +175,8 @@ export async function popup(data) {
   function showPicker() {
     const decoyInput = document.createElement("input");
 
-    for (const attr of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
-      if (inputAttributes[attr]) decoyInput.setAttribute(inputAttributes[attr].name, inputAttributes[attr].value);
+    for (const attrName of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
+      if (inputAttributes[attrName]) decoyInput.setAttribute(attrName, inputAttributes[attrName]);
     }
 
     decoyInput.addEventListener("change", (e) => browser.runtime.sendMessage({ type: "file", token, frameId, tabId, files: e.target.files }), { once: true });
@@ -184,7 +184,7 @@ export async function popup(data) {
   }
 }
 
-function generateFilename() {
+function generateDefaultFilename() {
   const date = new Date(Date.now());
   const currentDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000).toISOString();
   const filenameDate = currentDateTime.substring(0, 10);
