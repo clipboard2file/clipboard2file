@@ -16,8 +16,17 @@ window.addEventListener("click", async (event) => {
 
   if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
     target = event.target;
-  } else if (event.originalTarget.matches("input[type=file]:not([webkitdirectory])")) {
-    target = event.originalTarget;
+  } else {
+    try {
+      // try do "toString()" because Firefox can disallow read "originalTarget" property
+      new String(event.originalTarget);
+
+      if (event.originalTarget.matches("input[type=file]:not([webkitdirectory])")) {
+        target = event.originalTarget;
+      }
+    } catch  {
+        // permission denied
+    }
   }
 
   if (target) {
@@ -71,8 +80,9 @@ exportFunction(
   function (event) {
     if (event.type === "click" && this.matches("[type=file]:not([webkitdirectory])")) {
       handleInputElement(this);
+      return true;
     } else {
-      this.dispatchEvent(event);
+      return this.dispatchEvent(event);
     }
   },
   HTMLInputElement.prototype,
