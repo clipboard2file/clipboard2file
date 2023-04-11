@@ -18,14 +18,11 @@ window.addEventListener("click", async (event) => {
     target = event.target;
   } else {
     try {
-      // try do "toString()" because Firefox can disallow read "originalTarget" property
-      new String(event.originalTarget);
-
       if (event.originalTarget.matches("input[type=file]:not([webkitdirectory])")) {
         target = event.originalTarget;
       }
     } catch  {
-        // permission denied
+        // permission denied to read "originalTarget" property
     }
   }
 
