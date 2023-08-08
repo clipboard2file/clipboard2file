@@ -43,3 +43,5 @@ runtime.onMessage.addListener((data, sender) => {
 
   return false;
 });
+
+browser.runtime.onUpdateAvailable.addListener(() => {});
