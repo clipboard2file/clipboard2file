@@ -27,27 +27,7 @@ async function handleClick(event) {
 }
 
 window.addEventListener("click", handleClick);
-/*
-window.addEventListener("click", async (event) => {
-  let target;
 
-  if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
-    target = event.target;
-  } else {
-    try {
-      if (event.originalTarget.matches("input[type=file]:not([webkitdirectory])")) {
-        target = event.originalTarget;
-      }
-    } catch  {
-        // permission denied to read "originalTarget" property
-    }
-  }
-
-  if (target) {
-    event.preventDefault();
-    handleInputElement(target);
-  }
-});*/
 
 // Let the extension work on pages that stop propagation of input events (tinypng.com, etc.)
 exportFunction(

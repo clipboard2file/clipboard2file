@@ -12,7 +12,8 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "strict_min_version": "110.0"
+      "strict_min_version": "110.0",
+      "id": "clipboard2fileFix@spooky.hk"
     }
   },
   "permissions": ["<all_urls>", "clipboardRead", "clipboardWrite", "storage"],
