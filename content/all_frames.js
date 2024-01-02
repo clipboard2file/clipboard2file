@@ -10,7 +10,24 @@ browser.runtime.onMessage.addListener((data) => {
 
   return false;
 });
+async function handleClick(event) {
+  if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
+    event.preventDefault();
 
+    token = crypto.randomUUID();
+    clicked = event.target;
+
+    const inputAttributes = {};
+    
+    for (attr of event.target.attributes) {
+      inputAttributes[attr.name] = {name: attr.name, value: attr.value};
+    }
+    handleInputElement(clicked);
+  }
+}
+
+window.addEventListener("click", handleClick);
+/*
 window.addEventListener("click", async (event) => {
   let target;
 
@@ -30,7 +47,7 @@ window.addEventListener("click", async (event) => {
     event.preventDefault();
     handleInputElement(target);
   }
-});
+});*/
 
 // Let the extension work on pages that stop propagation of input events (tinypng.com, etc.)
 exportFunction(
