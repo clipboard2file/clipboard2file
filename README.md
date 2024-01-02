@@ -8,13 +8,7 @@
     />
   </sub>
   Clipboard2File
-  <a align="right" href="https://addons.mozilla.org/addon/clipboard2file/"
-    ><img
-      align="right"
-      height="50px"
-      src="https://i.imgur.com/2jJOtTI.png"
-      alt="Get Clipboard2File for Firefox"
-  /></a>
+  
 </h1>
 <div align="center">
 <img
@@ -26,3 +20,12 @@
 ---
 
 <p align="center">Clipboard2File is a tiny extension that lets you use an image on your clipboard as a file!</p>
+
+Original addon:
+<a align="right" href="https://addons.mozilla.org/addon/clipboard2file/"
+    ><img
+      align="right"
+      height="50px"
+      src="https://i.imgur.com/2jJOtTI.png"
+      alt="Get Clipboard2File for Firefox"
+  /></a>
