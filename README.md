@@ -1,3 +1,4 @@
+## This fixes the bug where no popup will be present, this uses the code of the "handleClick" function from https://github.com/daijro/Clipboard2File-Chrome
 <h1 align="left">
   <sub>
     <img
