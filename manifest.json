@@ -5,7 +5,7 @@
   "version": "3.7",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
-    "549": "./icons/clipboard2file.png"
+    "549": "./icons/clipboard2file.svg"
   },
   "options_ui": {
     "page": "./settings/settings.html"
