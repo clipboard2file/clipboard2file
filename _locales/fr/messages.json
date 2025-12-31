@@ -1,7 +1,4 @@
 {
-  "settingsTitle": {
-    "message": "Paramètres Clipboard2File"
-  },
   "clearOnPaste": {
     "message": "Vider le presse-papiers après le téléchargement"
   },

@@ -1,7 +1,4 @@
 {
-  "settingsTitle": {
-    "message": "Настройки Clipboard2File"
-  },
   "clearOnPaste": {
     "message": "Очистить буфер обмена после загрузки"
   },

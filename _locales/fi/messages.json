@@ -1,7 +1,4 @@
 {
-  "settingsTitle": {
-    "message": "Clipboard2File-asetukset"
-  },
   "clearOnPaste": {
     "message": "Tyhjennä leikepöytä latauksen jälkeen"
   },

@@ -1,7 +1,4 @@
 {
-  "settingsTitle": {
-    "message": "Clipboard2File Settings"
-  },
   "clearOnPaste": {
     "message": "Clear clipboard after uploading"
   },

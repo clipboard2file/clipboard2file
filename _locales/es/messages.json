@@ -1,7 +1,4 @@
 {
-  "settingsTitle": {
-    "message": "Configuración de Clipboard2File"
-  },
   "clearOnPaste": {
     "message": "Limpiar portapapeles después de subir"
   },
