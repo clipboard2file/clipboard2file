@@ -81,7 +81,7 @@ async function calculatePickerPosition(anchor, mousePromise, pickerWidth, picker
       height: anchor.height,
     };
   } else {
-    const mouse = await Promise.race([mousePromise, new Promise((resolve) => setTimeout(resolve, 200))]);
+    const mouse = await Promise.race([mousePromise, new Promise((resolve) => setTimeout(resolve, 150))]);
 
     if (mouse) {
       targetRect = { left: mouse.clientX, top: mouse.clientY, width: 0, height: 0 };
