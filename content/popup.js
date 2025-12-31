@@ -29,10 +29,15 @@ const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
 function resolveAnchor(data) {
   const { inputRect, win, event } = data;
+  const { width: vw, height: vh } = window.visualViewport;
 
-  const isTrusted = event?.isTrusted && (event.screenX !== 0 || event.clientX !== 0);
-  const offsetX = isTrusted ? event.screenX - event.clientX : win.mozInnerScreenX;
-  const offsetY = isTrusted ? event.screenY - event.clientY : win.mozInnerScreenY;
+  const isVisible = (r) => {
+    return r.top < vh && r.top + r.height > 0 && r.left < vw && r.left + r.width > 0;
+  };
+
+  const hasValidCoords = event && (event.screenX !== 0 || event.clientX !== 0);
+  const offsetX = hasValidCoords ? event.screenX - event.clientX : win.mozInnerScreenX;
+  const offsetY = hasValidCoords ? event.screenY - event.clientY : win.mozInnerScreenY;
 
   const toScreenRect = (rect) => ({
     x: rect.left + offsetX,
@@ -41,18 +46,17 @@ function resolveAnchor(data) {
     height: rect.height,
   });
 
-  const { width: vw, height: vh } = window.visualViewport;
   const isHuge = (w, h) => w > vw * 0.8 && h > vh * 0.8;
 
-  if (event?.targetRect?.width > 0 && !isHuge(event.targetRect.width, event.targetRect.height)) {
+  if (event?.targetRect?.width > 0 && isVisible(event.targetRect) && !isHuge(event.targetRect.width, event.targetRect.height)) {
     return toScreenRect(event.targetRect);
   }
 
-  if ((inputRect.width > 0 || inputRect.height > 0) && !isHuge(inputRect.width, inputRect.height)) {
+  if ((inputRect.width > 0 || inputRect.height > 0) && isVisible(inputRect) && !isHuge(inputRect.width, inputRect.height)) {
     return toScreenRect(inputRect);
   }
 
-  if (event?.clientX !== 0 && event?.clientY !== 0) {
+  if (event && event.clientX !== 0 && event.clientY !== 0) {
     return {
       x: event.clientX + offsetX,
       y: event.clientY + offsetY,
@@ -102,7 +106,9 @@ async function calculatePickerPosition(anchor, mousePromise, pickerWidth, picker
 
   let posY;
 
-  if (targetRect.width > pickerWidth && targetRect.height > pickerHeight) {
+  const isSubstantiallyLarger = targetRect.width > pickerWidth * 2 && targetRect.height > pickerHeight * 2;
+
+  if (isSubstantiallyLarger) {
     posY = targetRect.top + screenMargin;
   } else {
     const spaceAbove = targetRect.top;
