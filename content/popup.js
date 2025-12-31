@@ -25,52 +25,97 @@ function selectBaseName(element) {
   sel.addRange(range);
 }
 
-const clamp = (val, min, max) => Math.max(min, Math.min(val, max));
+const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+function resolveAnchor(data) {
+  const { inputRect, win, event } = data;
+
+  const isTrusted = event?.isTrusted && (event.screenX !== 0 || event.clientX !== 0);
+  const offsetX = isTrusted ? event.screenX - event.clientX : win.mozInnerScreenX;
+  const offsetY = isTrusted ? event.screenY - event.clientY : win.mozInnerScreenY;
+
+  const toScreenRect = (rect) => ({
+    x: rect.left + offsetX,
+    y: rect.top + offsetY,
+    width: rect.width,
+    height: rect.height,
+  });
+
+  const { width: vw, height: vh } = window.visualViewport;
+  const isHuge = (w, h) => w > vw * 0.8 && h > vh * 0.8;
+
+  if (event?.targetRect?.width > 0 && !isHuge(event.targetRect.width, event.targetRect.height)) {
+    return toScreenRect(event.targetRect);
+  }
+
+  if ((inputRect.width > 0 || inputRect.height > 0) && !isHuge(inputRect.width, inputRect.height)) {
+    return toScreenRect(inputRect);
+  }
+
+  if (event?.clientX !== 0 && event?.clientY !== 0) {
+    return {
+      x: event.clientX + offsetX,
+      y: event.clientY + offsetY,
+      width: 0,
+      height: 0,
+    };
+  }
+
+  return null;
+}
 
 async function calculatePickerPosition(anchor, mousePromise, pickerWidth, pickerHeight, screenMargin) {
-  const winWidth = window.visualViewport.width;
-  const winHeight = window.visualViewport.height;
+  const viewport = window.visualViewport;
 
-  const maxX = winWidth - pickerWidth - screenMargin;
-  const maxY = winHeight - pickerHeight - screenMargin;
+  let targetRect = null;
 
-  let posX, posY;
-
-  if (anchor && (anchor.width > 0 || anchor.height > 0)) {
-    const anchorLeft = anchor.x - window.mozInnerScreenX;
-    const anchorTop = anchor.y - window.mozInnerScreenY;
-
-    if (anchor.width > pickerWidth || anchor.width < pickerWidth / 2) {
-      posX = anchorLeft + (anchor.width - pickerWidth) / 2;
-    } else {
-      posX = anchorLeft;
-    }
-
-    if (anchor.width > pickerWidth && anchor.height > pickerHeight) {
-      posY = anchorTop + screenMargin;
-    } else {
-      const spaceAbove = anchorTop;
-      const spaceBelow = winHeight - (anchorTop + anchor.height);
-      const useAbove = spaceAbove >= pickerHeight || (spaceAbove > spaceBelow && spaceBelow < pickerHeight);
-
-      posY = useAbove ? anchorTop - pickerHeight : anchorTop + anchor.height;
-    }
+  if (anchor) {
+    targetRect = {
+      left: anchor.x - window.mozInnerScreenX,
+      top: anchor.y - window.mozInnerScreenY,
+      width: anchor.width,
+      height: anchor.height,
+    };
   } else {
-    const mouse = await mousePromise;
-    posX = mouse.clientX;
+    const mouse = await Promise.race([mousePromise, new Promise((resolve) => setTimeout(resolve, 200))]);
 
-    const spaceBelow = winHeight - mouse.clientY;
-
-    if (spaceBelow >= pickerHeight + screenMargin) {
-      posY = mouse.clientY;
-    } else {
-      posY = mouse.clientY - pickerHeight;
+    if (mouse) {
+      targetRect = { left: mouse.clientX, top: mouse.clientY, width: 0, height: 0 };
     }
   }
 
+  if (!targetRect) {
+    return {
+      posX: (viewport.width - pickerWidth) / 2,
+      posY: (viewport.height - pickerHeight) / 2,
+    };
+  }
+
+  let posX = targetRect.left;
+
+  if (targetRect.width > 0) {
+    const shouldCenter = targetRect.width > pickerWidth || targetRect.width < pickerWidth / 2;
+    if (shouldCenter) {
+      posX = targetRect.left + (targetRect.width - pickerWidth) / 2;
+    }
+  }
+
+  let posY;
+
+  if (targetRect.width > pickerWidth && targetRect.height > pickerHeight) {
+    posY = targetRect.top + screenMargin;
+  } else {
+    const spaceAbove = targetRect.top;
+    const spaceBelow = viewport.height - (targetRect.top + targetRect.height);
+
+    const placeBelow = spaceBelow >= pickerHeight || spaceBelow > spaceAbove;
+
+    posY = placeBelow ? targetRect.top + targetRect.height : targetRect.top - pickerHeight;
+  }
+
   return {
-    posX: clamp(posX, screenMargin, maxX),
-    posY: clamp(posY, screenMargin, maxY),
+    posX: clamp(posX, screenMargin, viewport.width - pickerWidth - screenMargin),
+    posY: clamp(posY, screenMargin, viewport.height - pickerHeight - screenMargin),
   };
 }
 
@@ -131,7 +176,7 @@ const [initData, settings] = await Promise.all([
 if (!initData) {
   browser.runtime.sendMessage({ type: "cancel" });
 } else {
-  const { clipboardImage, inputAttributes, anchor, backgroundDevicePixelRatio } = initData;
+  const { clipboardImage, inputAttributes, positionData, backgroundDevicePixelRatio } = initData;
 
   const root = document.getElementById("root");
   const filenameContainer = document.getElementById("filenameContainer");
@@ -249,8 +294,14 @@ if (!initData) {
 
   selectAll.textContent = browser.i18n.getMessage("showAllFiles");
 
-  const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
-  document.body.style.setProperty("--devicePixelRatio", dpr);
+  const updateDPR = () => {
+    const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
+    document.body.style.setProperty("--devicePixelRatio", dpr);
+  };
+
+  updateDPR();
+
+  window.addEventListener("resize", updateDPR);
 
   formatToggle.addEventListener("pointerdown", async (e) => {
     if (e.button === 2) return;
@@ -320,21 +371,16 @@ if (!initData) {
   if (settings.showFilenameBox) {
     filenameDiv.focus();
     selectBaseName(filenameDiv);
-  } else {
-    document.body.tabIndex = -1;
-    document.body.focus();
   }
 
   const modalWidth = (PICKER_WIDTH * backgroundDevicePixelRatio) / window.devicePixelRatio;
   const modalHeight = (PICKER_HEIGHT * backgroundDevicePixelRatio) / window.devicePixelRatio;
 
+  const anchor = resolveAnchor(positionData);
   const { posX, posY } = await calculatePickerPosition(anchor, mouseoverPromise, modalWidth, modalHeight, SCREEN_MARGIN);
 
-  root.style.position = "fixed";
-  root.style.left = `${posX}px`;
-  root.style.top = `${posY}px`;
-  root.style.margin = "0";
-  root.style.opacity = "1";
+  root.style.left = `${(posX / window.visualViewport.width) * 100}%`;
+  root.style.top = `${(posY / window.visualViewport.height) * 100}%`;
 
   const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
   if (!prefersReducedMotion) {

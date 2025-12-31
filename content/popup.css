@@ -1,11 +1,11 @@
 :root {
-  --selectAll: rgb(0, 221, 255);
-  --selectAllHover: rgb(128, 235, 255);
-  --selectAllFont: rgb(21, 20, 26);
-  --filenameFocus: rgb(53, 132, 228);
   --filenameFont: rgb(251, 251, 254);
   --filenameBackground: rgb(28, 27, 34);
+  --filenameFocus: rgb(53, 132, 228);
+  --selectAll: rgb(0, 221, 255);
+  --selectAllHover: rgb(128, 235, 255);
   --selectAllActive: rgb(170, 242, 255);
+  --selectAllFont: rgb(21, 20, 26);
 }
 
 * {
@@ -15,12 +15,12 @@
 
 html,
 body {
-  margin: 0;
-  padding: 0;
   width: 100%;
   height: 100%;
-  background: transparent;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
+  background: transparent;
   color-scheme: light;
 
   &:focus {
@@ -36,33 +36,32 @@ button {
 }
 
 #root {
+  position: fixed;
+  opacity: 0;
+
   display: flex;
   flex-flow: column;
+  width: calc(300px / var(--devicePixelRatio));
+  height: calc(250px / var(--devicePixelRatio));
   padding: calc(8px / var(--devicePixelRatio));
+
   background-color: rgb(66, 65, 77);
   border: calc(1px / var(--devicePixelRatio)) rgb(82, 82, 94) solid;
   border-radius: calc(8px / var(--devicePixelRatio));
   box-shadow: 0 calc(2px / var(--devicePixelRatio)) calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
-
-  width: calc(300px / var(--devicePixelRatio));
-  height: calc(250px / var(--devicePixelRatio));
-
-  position: fixed;
-  left: var(--posX);
-  top: var(--posY);
-  opacity: 0;
 }
 
 #filenameContainer {
   display: flex;
   align-items: center;
-  background-color: var(--filenameBackground);
   height: calc(50px / var(--devicePixelRatio));
   margin-bottom: calc(10px / var(--devicePixelRatio));
   padding-inline: calc(8px / var(--devicePixelRatio));
+
+  background-color: var(--filenameBackground);
   border-radius: calc(4px / var(--devicePixelRatio));
-  cursor: text;
   overflow: hidden;
+  cursor: text;
 
   &:focus-within {
     outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
@@ -76,21 +75,22 @@ button {
 #filenameBase {
   display: inline-flex;
   flex: 0 1 auto;
-  color: var(--filenameFont);
-  font-size: calc(14px / var(--devicePixelRatio));
-  font-family: sans-serif;
-  outline: none;
-  white-space: nowrap;
   overflow: hidden;
+
+  color: var(--filenameFont);
+  font-family: sans-serif;
+  font-size: calc(14px / var(--devicePixelRatio));
+  white-space: nowrap;
+  outline: none;
 
   &.empty {
     &::after {
       content: attr(data-placeholder);
+      display: inline-flex;
       font-family: inherit;
       color: inherit;
       opacity: 0.5;
       pointer-events: none;
-      display: inline-flex;
     }
 
     & > br {
@@ -101,32 +101,31 @@ button {
 
 #filenameExt {
   flex: 0 0 auto;
+  margin-right: auto;
+
   color: var(--filenameFont);
   font-family: sans-serif;
   font-size: calc(14px / var(--devicePixelRatio));
-  opacity: 0.5;
   white-space: pre;
+
+  opacity: 0.5;
   user-select: none;
   pointer-events: none;
-  margin-right: auto;
 }
 
 #formatToggle {
-  flex: 0 0 auto;
-  margin-left: calc(8px / var(--devicePixelRatio));
-
-  background-color: rgba(60, 60, 60, 1);
-  color: white;
-  font-weight: 700;
-  font-size: calc(11px / var(--devicePixelRatio));
-
-  width: calc(42px / var(--devicePixelRatio));
   display: flex;
   justify-content: center;
+  flex: 0 0 auto;
+  padding-block: calc(3px / var(--devicePixelRatio));
+  padding-inline: calc(6px / var(--devicePixelRatio));
 
-  padding: calc(4px / var(--devicePixelRatio)) 0;
-  cursor: pointer;
+  color: white;
+  font-size: calc(13px / var(--devicePixelRatio));
+  font-weight: 700;
   text-transform: uppercase;
+
+  background-color: rgba(60, 60, 60, 1);
 
   &:hover {
     background-color: rgba(90, 90, 90, 1);
@@ -140,6 +139,7 @@ button {
 #preview {
   width: 100%;
   height: 100%;
+
   background-color: unset;
   background-size: contain;
   background-position: center;
@@ -155,11 +155,13 @@ button {
 }
 
 #selectAll {
-  font: menu;
-  font-weight: 600;
-  font-size: calc(14px / var(--devicePixelRatio));
-  margin-top: calc(10px / var(--devicePixelRatio));
   min-height: calc(32px / var(--devicePixelRatio));
+  margin-top: calc(10px / var(--devicePixelRatio));
+
+  font: menu;
+  font-size: calc(14px / var(--devicePixelRatio));
+  font-weight: 600;
+
   background-color: var(--selectAll);
 
   &:hover {

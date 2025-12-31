@@ -34,7 +34,13 @@ runtime.onMessage.addListener((data, sender) => {
       return Promise.resolve();
     },
     cancel: function () {
-      if (tabId) cleanupSession(tabId);
+      const session = activeSessions.get(tabId);
+      if (session) {
+        try {
+          session.inputPort.postMessage({ type: "cancel" });
+        } catch (e) {}
+        cleanupSession(tabId);
+      }
       return Promise.resolve();
     },
   };
@@ -71,10 +77,10 @@ runtime.onConnect.addListener((port) => {
           data: {
             inputAttributes: msg.inputAttributes,
             clipboardImage: blob,
-            anchor: msg.anchor,
+            positionData: msg.positionData,
           },
           tagName: tagName,
-          cssCode: generateUserStyle(tagName),
+          cssCode: `${tagName} { all: unset !important; }`,
         };
 
         pendingSessions.set(tabId, context);
@@ -136,10 +142,6 @@ function cleanupSession(tabId) {
     pending.inputPort.disconnect();
     pendingSessions.delete(tabId);
   }
-}
-
-function generateUserStyle(tagName) {
-  return `${tagName} { all: unset !important; }`;
 }
 
 function generateElementName(length = 10) {

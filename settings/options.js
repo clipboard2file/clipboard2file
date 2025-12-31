@@ -6,7 +6,7 @@ for (const item of options) {
   const group = document.createElement("div");
   group.className = "setting-group";
   group.id = `group-${item.key}`;
-  createWidgetStructure(group, item);
+  createWidget(group, item);
   root.appendChild(group);
 }
 
@@ -75,7 +75,7 @@ function updateWidgetValue(item, settings) {
   }
 }
 
-function createWidgetStructure(container, item) {
+function createWidget(container, item) {
   switch (item.type) {
     case "checkbox":
       createCheckbox(container, item);
