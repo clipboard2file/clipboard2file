@@ -1,87 +1,72 @@
-window.addEventListener("DOMContentLoaded", async () => {
-  const settings = {
-    clearOnPaste: {
-      question: browser.i18n.getMessage("clearOnPaste"),
-      answers: [
-        {
-          diplayValue: browser.i18n.getMessage("true"),
-          value: true,
-        },
-        {
-          diplayValue: browser.i18n.getMessage("false"),
-          value: false,
-          default: true,
-        },
-      ],
+export const options = [
+  {
+    key: "clearOnPaste",
+    type: "checkbox",
+    default: false,
+    l10nLabel: "clearOnPaste",
+  },
+  {
+    key: "showFilenameBox",
+    type: "checkbox",
+    default: false,
+    l10nLabel: "showFilenameBox",
+  },
+  {
+    key: "defaultFilename",
+    type: "select",
+    default: "formatted",
+    l10nLabel: "defaultFilename",
+    options: [
+      { value: "formatted", l10nId: "formattedTime" },
+      { value: "unix", l10nId: "unixTimestamp" },
+      { value: "unknown", text: "unknown.png" },
+      { value: "custom", l10nId: "custom" },
+    ],
+  },
+  {
+    key: "customFilenameText",
+    type: "customInputWithButton",
+    l10nLabel: "customFilenameLabel",
+    placeholderL10n: "customPlaceholder",
+    buttonL10n: "save",
+    default: "",
+    condition: {
+      key: "defaultFilename",
+      value: "custom",
     },
-    showFilenameBox: {
-      question: browser.i18n.getMessage("showFilenameBox"),
-      answers: [
-        {
-          diplayValue: browser.i18n.getMessage("true"),
-          value: true,
-        },
-        {
-          diplayValue: browser.i18n.getMessage("false"),
-          value: false,
-          default: true,
-        },
-      ],
+  },
+  {
+    key: "defaultFileType",
+    type: "select",
+    default: "png",
+    l10nLabel: "defaultFileType",
+    options: [
+      { value: "png", text: "PNG" },
+      { value: "jpeg", text: "JPG" },
+    ],
+  },
+  {
+    key: "jpegQuality",
+    type: "range",
+    default: 80,
+    min: 50,
+    max: 100,
+    step: 1,
+    unit: "%",
+    l10nLabel: "jpegQuality",
+    condition: {
+      key: "defaultFileType",
+      value: "jpeg",
     },
-    defaultFilename: {
-      question: browser.i18n.getMessage("defaultFilename"),
-      answers: [
-        {
-          diplayValue: browser.i18n.getMessage("formattedTime"),
-          value: "formatted",
-          default: true,
-        },
-        {
-          diplayValue: browser.i18n.getMessage("unixTimestamp"),
-          value: "unix",
-        },
-        {
-          diplayValue: "unknown.png",
-          value: "unknown",
-        },
-      ],
-    },
-  };
-  const main = document.getElementById("root");
+  },
+];
 
-  for (const settingName in settings) {
-    const setting = settings[settingName];
-    const form = document.createElement("form");
-    const question = document.createElement("p");
-    question.textContent = setting.question;
-    form.appendChild(question);
+export async function getSettings() {
+  const defaults = options.reduce((acc, curr) => {
+    acc[curr.key] = curr.default;
+    return acc;
+  }, {});
 
-    for (const answer of setting.answers) {
-      const input = document.createElement("input");
-      const id = crypto.randomUUID();
-      input.setAttribute("type", "radio");
-      input.setAttribute("id", id);
-      input.setAttribute("name", settingName);
-      input.setAttribute("value", answer.value);
-
-      const storedValues = await browser.storage.local.get(settingName);
-      const storedValue = storedValues[settingName];
-
-      if (answer.value == storedValue) input.setAttribute("checked", "checked");
-      else if (!storedValue && answer.default) input.setAttribute("checked", "checked");
-
-      input.addEventListener("change", (e) => {
-        browser.storage.local.set({ [settingName]: answer.value });
-      });
-
-      const label = document.createElement("label");
-      label.setAttribute("for", id);
-      label.textContent = answer.diplayValue;
-
-      form.appendChild(input);
-      form.appendChild(label);
-    }
-
-    main.appendChild(form);
-  }
-});
+  const stored = await browser.storage.local.get(Object.keys(defaults));
+  return { ...defaults, ...stored };
+}

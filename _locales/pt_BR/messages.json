@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Mostrar todos os arquivos"
+  "settingsTitle": {
+    "message": "Configurações do Clipboard2File"
   },
   "clearOnPaste": {
-    "message": "Papelão transparente em pasta?"
+    "message": "Limpar área de transferência após o envio"
   },
   "showFilenameBox": {
-    "message": "Mostrar caixa de texto para editar o nome do arquivo?"
+    "message": "Mostrar caixa de texto para editar o nome do arquivo"
   },
   "defaultFilename": {
-    "message": "Qual deve ser o nome padrão do arquivo?"
+    "message": "Nome de arquivo padrão"
   },
-  "true": { "message": "Sim" },
-  "false": { "message": "Não" },
+  "defaultFileType": {
+    "message": "Formato de imagem padrão"
+  },
+  "jpegQuality": {
+    "message": "Qualidade JPG"
+  },
+  "customFilenameLabel": {
+    "message": "Nome de arquivo personalizado"
+  },
+  "customPlaceholder": {
+    "message": "Digite o nome de arquivo personalizado aqui"
+  },
   "formattedTime": { "message": "Tempo formatado" },
-  "unixTimestamp": { "message": "Carimbo de tempo cru" }
+  "unixTimestamp": { "message": "Carimbo de tempo cru" },
+  "custom": { "message": "Personalizado" },
+  "save": { "message": "Salvar" },
+  "showAllFiles": { "message": "Mostrar todos os arquivos" }
 }

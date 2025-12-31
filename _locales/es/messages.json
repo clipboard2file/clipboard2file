@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Mostrar todos los archivos"
+  "settingsTitle": {
+    "message": "Configuración de Clipboard2File"
   },
   "clearOnPaste": {
-    "message": "¿Borrar el portapapeles al pegar?"
+    "message": "Limpiar portapapeles después de subir"
   },
   "showFilenameBox": {
-    "message": "¿Mostrar cuadro de texto para editar el nombre del archivo?"
+    "message": "Mostrar cuadro de texto para editar el nombre de archivo"
   },
   "defaultFilename": {
-    "message": "¿Cuál debe ser el nombre del archivo por defecto?"
+    "message": "Nombre de archivo predeterminado"
   },
-  "true": { "message": "Sí" },
-  "false": { "message": "No" },
+  "defaultFileType": {
+    "message": "Formato de imagen predeterminado"
+  },
+  "jpegQuality": {
+    "message": "Calidad JPG"
+  },
+  "customFilenameLabel": {
+    "message": "Nombre de archivo personalizado"
+  },
+  "customPlaceholder": {
+    "message": "Escribe aquí el nombre de archivo personalizado"
+  },
   "formattedTime": { "message": "Tiempo formateado" },
-  "unixTimestamp": { "message": "Marca de tiempo UNIX" }
+  "unixTimestamp": { "message": "Marca de tiempo UNIX" },
+  "custom": { "message": "Personalizado" },
+  "save": { "message": "Guardar" },
+  "showAllFiles": { "message": "Mostrar todos los archivos" }
 }

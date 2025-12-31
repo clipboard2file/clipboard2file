@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Näytä kaikki tiedostot"
+  "settingsTitle": {
+    "message": "Clipboard2File-asetukset"
   },
   "clearOnPaste": {
-    "message": "Tyhjennä leikepöytä liitäessä?"
+    "message": "Tyhjennä leikepöytä latauksen jälkeen"
   },
   "showFilenameBox": {
-    "message": "Näytä tekstiruutu tiedostonimen muokkausta varten?"
+    "message": "Näytä tekstikenttä tiedostonimen muokkausta varten"
   },
   "defaultFilename": {
-    "message": "Mikä olisi oletustiedoston nimi?"
+    "message": "Oletustiedostonimi"
   },
-  "true": { "message": "Kyllä" },
-  "false": { "message": "Ei" },
+  "defaultFileType": {
+    "message": "Oletuskuvamuoto"
+  },
+  "jpegQuality": {
+    "message": "JPG-laatu"
+  },
+  "customFilenameLabel": {
+    "message": "Mukautettu tiedostonimi"
+  },
+  "customPlaceholder": {
+    "message": "Kirjoita mukautettu tiedostonimi tähän"
+  },
   "formattedTime": { "message": "Muotoiltu aika" },
-  "unixTimestamp": { "message": "UNIX Aikaleima" }
+  "unixTimestamp": { "message": "UNIX-aikaleima" },
+  "custom": { "message": "Mukautettu" },
+  "save": { "message": "Tallenna" },
+  "showAllFiles": { "message": "Näytä kaikki tiedostot" }
 }

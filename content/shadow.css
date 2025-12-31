@@ -1,60 +1,26 @@
-:host {
-  all: unset !important;
+dialog {
+  padding-block: 0;
+  padding-inline: 0;
+  margin-block: 0;
+  margin-inline: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  border: none;
+  background: transparent;
+  color-scheme: normal;
+  overflow: hidden;
+
+  &::backdrop {
+    background: transparent;
+  }
 }
 
 iframe {
-  display: block;
-  width: 100%;
-  height: 100%;
+  inline-size: 100%;
+  block-size: 100%;
   border: none;
+  display: block;
   color-scheme: light;
-}
-
-dialog {
-  --popupBackground: rgb(66, 65, 77);
-  --popupBorder: rgb(82, 82, 94);
-}
-
-dialog {
-  display: block;
-  position: fixed;
-  margin: 0px;
-  padding: 0px;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2147483647;
-  max-width: 100%;
-  max-height: 100%;
-  background-color: transparent;
-  border: none;
-  box-sizing: border-box;
-}
-
-div {
-  --popupBackground: rgb(66, 65, 77);
-  --popupBorder: rgb(82, 82, 94);
-}
-
-div {
-  display: block;
-  position: fixed;
-  margin: 0px;
-  padding: 0px;
-  top: var(--posY);
-  left: var(--posX);
-  width: calc(250px / var(--devicePixelRatio));
-  height: calc(200px / var(--devicePixelRatio));
-  opacity: 0;
-  pointer-events: none;
-  background-color: var(--popupBackground);
-  border: calc(1px / var(--devicePixelRatio)) var(--popupBorder) solid;
-  border-radius: calc(8px / var(--devicePixelRatio));
-  box-shadow: 0 calc(2px / var(--devicePixelRatio)) calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
-  box-sizing: border-box;
-}
-
-dialog::backdrop {
-  display: none;
 }

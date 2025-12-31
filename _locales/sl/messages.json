@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Prikaži vse datoteke"
+  "settingsTitle": {
+    "message": "Nastavitve Clipboard2File"
   },
   "clearOnPaste": {
-    "message": "Izbriši odložišče pri prilepljanju?"
+    "message": "Pošisti odložišče po nalaganju"
   },
   "showFilenameBox": {
-    "message": "Prikaži besedilno polje za urejanje imena datoteke?"
+    "message": "Prikaži besedilno polje za urejanje imena datoteke"
   },
   "defaultFilename": {
-    "message": "Kakšno naj bo privzeto ime datoteke?"
+    "message": "Privzeto ime datoteke"
   },
-  "true": { "message": "Da" },
-  "false": { "message": "Ne" },
-  "formattedTime": { "message": "Formatiran čas" },
-  "unixTimestamp": { "message": "Surovi časovni žig" }
+  "defaultFileType": {
+    "message": "Privzeti format slike"
+  },
+  "jpegQuality": {
+    "message": "Kakovost JPG"
+  },
+  "customFilenameLabel": {
+    "message": "Ime datoteke po meri"
+  },
+  "customPlaceholder": {
+    "message": "Tukaj vnesite ime datoteke po meri"
+  },
+  "formattedTime": { "message": "Oblikovani čas" },
+  "unixTimestamp": { "message": "Surovi časovni žig" },
+  "custom": { "message": "Po meri" },
+  "save": { "message": "Shrani" },
+  "showAllFiles": { "message": "Prikaži vse datoteke" }
 }

@@ -1,16 +1,3 @@
-html,
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  color-scheme: light;
-}
-
-* {
-  box-sizing: border-box;
-  text-rendering: optimizeLegibility;
-}
-
 :root {
   --selectAll: rgb(0, 221, 255);
   --selectAllHover: rgb(128, 235, 255);
@@ -21,31 +8,133 @@ body {
   --selectAllActive: rgb(170, 242, 255);
 }
 
-body {
-  display: flex;
-  flex-flow: column;
-  padding: calc(8px / var(--devicePixelRatio));
+* {
+  box-sizing: border-box;
+  text-rendering: optimizeLegibility;
 }
 
-button,
-input {
-  border: none;
-  padding-block: 0px;
-  border-radius: calc(4px / var(--devicePixelRatio));
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  color-scheme: light;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 button {
+  border: none;
+  padding-block: 0px;
+  border-radius: calc(4px / var(--devicePixelRatio));
   outline-offset: calc(2px / var(--devicePixelRatio));
 }
 
-#filename {
-  color: var(--filenameFont);
+#root {
+  display: flex;
+  flex-flow: column;
+  padding: calc(8px / var(--devicePixelRatio));
+  background-color: rgb(66, 65, 77);
+  border: calc(1px / var(--devicePixelRatio)) rgb(82, 82, 94) solid;
+  border-radius: calc(8px / var(--devicePixelRatio));
+  box-shadow: 0 calc(2px / var(--devicePixelRatio)) calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
+
+  width: calc(300px / var(--devicePixelRatio));
+  height: calc(250px / var(--devicePixelRatio));
+
+  position: fixed;
+  left: var(--posX);
+  top: var(--posY);
+  opacity: 0;
+}
+
+#filenameContainer {
+  display: flex;
+  align-items: center;
   background-color: var(--filenameBackground);
   height: calc(50px / var(--devicePixelRatio));
-  padding: calc(1px / var(--devicePixelRatio));
-  font-size: calc(14px / var(--devicePixelRatio));
   margin-bottom: calc(10px / var(--devicePixelRatio));
-  padding-inline: calc(5px / var(--devicePixelRatio));
+  padding-inline: calc(8px / var(--devicePixelRatio));
+  border-radius: calc(4px / var(--devicePixelRatio));
+  cursor: text;
+  overflow: hidden;
+
+  &:focus-within {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
+  }
+
+  &:not(:focus-within) #filenameBase::selection {
+    background: transparent;
+  }
+}
+
+#filenameBase {
+  display: inline-flex;
+  flex: 0 1 auto;
+  color: var(--filenameFont);
+  font-size: calc(14px / var(--devicePixelRatio));
+  font-family: sans-serif;
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+
+  &.empty {
+    &::after {
+      content: attr(data-placeholder);
+      font-family: inherit;
+      color: inherit;
+      opacity: 0.5;
+      pointer-events: none;
+      display: inline-flex;
+    }
+
+    & > br {
+      display: none;
+    }
+  }
+}
+
+#filenameExt {
+  flex: 0 0 auto;
+  color: var(--filenameFont);
+  font-family: sans-serif;
+  font-size: calc(14px / var(--devicePixelRatio));
+  opacity: 0.5;
+  white-space: pre;
+  user-select: none;
+  pointer-events: none;
+  margin-right: auto;
+}
+
+#formatToggle {
+  flex: 0 0 auto;
+  margin-left: calc(8px / var(--devicePixelRatio));
+
+  background-color: rgba(60, 60, 60, 1);
+  color: white;
+  font-weight: 700;
+  font-size: calc(11px / var(--devicePixelRatio));
+
+  width: calc(42px / var(--devicePixelRatio));
+  display: flex;
+  justify-content: center;
+
+  padding: calc(4px / var(--devicePixelRatio)) 0;
+  cursor: pointer;
+  text-transform: uppercase;
+
+  &:hover {
+    background-color: rgba(90, 90, 90, 1);
+  }
+
+  &:focus-visible {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+  }
 }
 
 #preview {
@@ -55,37 +144,33 @@ button {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+
+  &:is(:hover, :focus-within) {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+  }
+
+  &:focus {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAllHover);
+  }
 }
 
 #selectAll {
   font: menu;
   font-weight: 600;
-  font-size: calc(12px / var(--devicePixelRatio));
+  font-size: calc(14px / var(--devicePixelRatio));
   margin-top: calc(10px / var(--devicePixelRatio));
   min-height: calc(32px / var(--devicePixelRatio));
   background-color: var(--selectAll);
-}
 
-#filename:focus {
-  outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
-}
+  &:hover {
+    background-color: var(--selectAllHover);
+  }
 
-#preview:is(:hover, :focus-within) {
-  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
-}
+  &:active {
+    background-color: var(--selectAllActive);
+  }
 
-#preview:focus {
-  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAllHover);
-}
-
-#selectAll:hover {
-  background-color: var(--selectAllHover);
-}
-
-#selectAll:active {
-  background-color: var(--selectAllActive);
-}
-
-#selectAll:focus-visible {
-  outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+  &:focus-visible {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+  }
 }

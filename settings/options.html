@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Settings - Clipboard2File</title>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/x-icon" href="../icons/clipboard2file.svg" />
+    <style>
+      :root {
+        --bg-color: #1a1a1a;
+        --card-bg: #252525;
+        --text-color: #f0f0f0;
+        --accent-color: #00ddff;
+        --border-color: #333;
+        --input-bg: #333;
+        --button-bg: #00ddff;
+        --button-text: #000;
+        --button-disabled: #555;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: sans-serif;
+        margin-block-end: 40px;
+        user-select: none;
+      }
+
+      #container {
+        inline-size: 100%;
+        max-inline-size: 600px;
+        padding: 20px;
+        margin-inline: auto;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-block-end: 30px;
+        padding-block-end: 20px;
+        border-block-end: 1px solid var(--border-color);
+
+        h1 {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+      }
+
+      .setting-group {
+        background-color: var(--card-bg);
+        padding-block: 15px;
+        padding-inline: 20px;
+        margin-block-end: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+
+        &.inline-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          .setting-label {
+            margin-block-end: 0;
+          }
+        }
+
+        &.hidden {
+          display: none;
+        }
+      }
+
+      .setting-label {
+        display: block;
+        font-weight: 500;
+        font-size: 0.95rem;
+      }
+
+      .block-label {
+        margin-block-end: 10px;
+      }
+
+      .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        inline-size: 100%;
+
+        input[type="checkbox"] {
+          inline-size: 20px;
+          block-size: 20px;
+          accent-color: var(--accent-color);
+          cursor: pointer;
+          margin: 0;
+        }
+      }
+
+      select {
+        min-inline-size: 150px;
+        padding-block: 8px;
+        padding-inline: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        font-size: 0.9rem;
+        cursor: pointer;
+
+        &:focus {
+          outline: 2px solid var(--accent-color);
+          border-color: transparent;
+        }
+      }
+
+      .input-group {
+        display: flex;
+        align-items: stretch;
+      }
+
+      .text-input-wrapper {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding-inline: 12px;
+
+        &:focus-within {
+          outline: 2px solid var(--accent-color);
+          border-color: transparent;
+        }
+
+        input[type="text"] {
+          flex-grow: 1;
+          border: none;
+          background: transparent;
+          color: var(--text-color);
+          font-size: 0.9rem;
+          padding-block: 8px;
+          padding-inline: 0;
+          outline: none;
+        }
+      }
+
+      .filename-extension {
+        color: #888;
+        font-size: 0.9rem;
+        padding-inline-start: 2px;
+        white-space: nowrap;
+      }
+
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      input[type="range"] {
+        flex-grow: 1;
+        accent-color: var(--accent-color);
+        cursor: pointer;
+      }
+
+      .range-value {
+        font-variant-numeric: tabular-nums;
+        font-weight: bold;
+        color: var(--accent-color);
+        min-inline-size: 3ch;
+        text-align: end;
+      }
+
+      .save-button {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: none;
+        padding-block: 8px;
+        padding-inline: 16px;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-inline-start: 10px;
+        white-space: nowrap;
+
+        &:disabled {
+          background-color: var(--button-disabled);
+          color: #aaa;
+          cursor: not-allowed;
+          opacity: 0.7;
+        }
+
+        &:not(:disabled):hover {
+          opacity: 0.9;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="./options.js" type="module"></script>
+    <div id="container">
+      <header>
+        <img aria-hidden="true" src="../icons/clipboard2file.svg" height="48" width="48" />
+        <h1 id="pageTitle">Clipboard2File Settings</h1>
+      </header>
+      <main id="root"></main>
+    </div>
+  </body>
+</html>

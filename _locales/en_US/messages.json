@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Show all files"
+  "settingsTitle": {
+    "message": "Clipboard2File Settings"
   },
   "clearOnPaste": {
-    "message": "Clear clipboard after pasting?"
+    "message": "Clear clipboard after uploading"
   },
   "showFilenameBox": {
-    "message": "Show text box for editing file name?"
+    "message": "Show text box for editing filename"
   },
   "defaultFilename": {
-    "message": "What should the default file name be?"
+    "message": "Default filename"
   },
-  "true": { "message": "Yes" },
-  "false": { "message": "No" },
-  "formattedTime": { "message": "Formatted Time" },
-  "unixTimestamp": { "message": "UNIX Timestamp" }
+  "defaultFileType": {
+    "message": "Default image format"
+  },
+  "jpegQuality": {
+    "message": "JPG quality"
+  },
+  "customFilenameLabel": {
+    "message": "Custom filename"
+  },
+  "customPlaceholder": {
+    "message": "Type custom filename here"
+  },
+  "formattedTime": { "message": "Formatted time" },
+  "unixTimestamp": { "message": "Raw timestamp" },
+  "custom": { "message": "Custom" },
+  "save": { "message": "Save" },
+  "showAllFiles": { "message": "Show all files" }
 }

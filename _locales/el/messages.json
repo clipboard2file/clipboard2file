@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Εμφάνιση όλων των αρχείων"
+  "settingsTitle": {
+    "message": "Ρυθμίσεις Clipboard2File"
   },
   "clearOnPaste": {
-    "message": "Εκκαθάριση πρόχειρου κατά την επικόλληση;"
+    "message": "Εκκαθάριση πρόχειρου μετά τη μεταφόρτωση"
   },
   "showFilenameBox": {
-    "message": "Εμφάνιση πλαισίου κειμένου για την επεξεργασία του ονόματος αρχείου;"
+    "message": "Εμφάνιση πλαισίου κειμένου για επεξεργασία ονόματος αρχείου"
   },
   "defaultFilename": {
-    "message": "Ποιο θα πρέπει να είναι το προεπιλεγμένο όνομα αρχείου;"
+    "message": "Προεπιλεγμένο όνομα αρχείου"
   },
-  "true": { "message": "Ναι" },
-  "false": { "message": "Όχι" },
-  "formattedTime": { "message": "Μορφοποιημένος χρόνος" },
-  "unixTimestamp": { "message": "Χρονοσφραγίδα UNIX" }
+  "defaultFileType": {
+    "message": "Προεπιλεγμένη μορφή εικόνας"
+  },
+  "jpegQuality": {
+    "message": "Ποιότητα JPG"
+  },
+  "customFilenameLabel": {
+    "message": "Προσαρμοσμένο όνομα αρχείου"
+  },
+  "customPlaceholder": {
+    "message": "Πληκτρολογήστε προσαρμοσμένο όνομα αρχείου εδώ"
+  },
+  "formattedTime": { "message": "Μορφοποιημένη ώρα" },
+  "unixTimestamp": { "message": "Χρονοσφραγίδα UNIX" },
+  "custom": { "message": "Προσαρμοσμένο" },
+  "save": { "message": "Αποθήκευση" },
+  "showAllFiles": { "message": "Εμφάνιση όλων των αρχείων" }
 }

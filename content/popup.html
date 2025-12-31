@@ -1,8 +1,19 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/content/popup.css" />
+    <script src="popup.js" type="module"></script>
+  </head>
   <body tabindex="-1">
-    <input id="filename" type="text" autocomplete="off" />
-    <button id="preview"></button>
-    <button id="selectAll">Show all files</button>
+    <div id="root">
+      <div id="filenameContainer">
+        <div id="filenameBase" contenteditable="plaintext-only" spellcheck="false"></div>
+        <div id="filenameExt"></div>
+        <button tabindex="-1" id="formatToggle" type="button">PNG</button>
+      </div>
+      <button id="preview"></button>
+      <button id="selectAll">Show all files</button>
+    </div>
   </body>
 </html>

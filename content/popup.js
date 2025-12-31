@@ -1,194 +1,349 @@
-export async function popup(data) {
-  const [shadowStyleRequest, iframeRequest, iframeStyleRequest, settings] = await Promise.all([
-    fetch(browser.runtime.getURL(`content/shadow.css`)),
-    fetch(browser.runtime.getURL(`content/popup.html`)),
-    fetch(browser.runtime.getURL(`content/popup.css`)),
-    browser.storage.local.get(["showFilenameBox", "clearOnPaste", "defaultFilename"]),
-  ]);
+import { getSettings } from "../settings/settings.js";
 
-  const { clipboardImage, token, inputAttributes, frameId, tabId } = data;
+const PICKER_WIDTH = 300;
+const PICKER_HEIGHT = 250;
+const SCREEN_MARGIN = 8;
+const ANIMATION_DURATION = 270;
 
-  const aside = document.createElement("aside");
-  const iframe = document.createElement("iframe");
-  const dialog = document.createElement("dialog");
-  const root = document.createElement("div");
+async function convertToJpeg(blob, quality) {
+  const bitmap = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext("bitmaprenderer", { alpha: false });
+  ctx.transferFromImageBitmap(bitmap);
+  return await canvas.convertToBlob({
+    type: "image/jpeg",
+    quality: quality,
+  });
+}
 
-  const shadow = aside.attachShadow({ mode: "closed" });
+function selectBaseName(element) {
+  if (!element.firstChild) return;
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
 
-  const shadowStyleElement = document.createElement("style");
-  shadowStyleElement.textContent = await shadowStyleRequest.text();
+const clamp = (val, min, max) => Math.max(min, Math.min(val, max));
 
-  shadow.appendChild(shadowStyleElement);
-  shadow.append(dialog);
+async function calculatePickerPosition(anchor, mousePromise, pickerWidth, pickerHeight, screenMargin) {
+  const winWidth = window.visualViewport.width;
+  const winHeight = window.visualViewport.height;
 
-  iframe.srcdoc = await iframeRequest.text();
-  dialog.append(root);
-  root.appendChild(iframe);
+  const maxX = winWidth - pickerWidth - screenMargin;
+  const maxY = winHeight - pickerHeight - screenMargin;
 
-  const backgroundDevicePixelRatio = await browser.runtime.sendMessage({ type: "backgroundDevicePixelRatio" });
+  let posX, posY;
 
-  const modalWidth = (250 * backgroundDevicePixelRatio) / window.devicePixelRatio;
-  const modalHeight = (200 * backgroundDevicePixelRatio) / window.devicePixelRatio;
+  if (anchor && (anchor.width > 0 || anchor.height > 0)) {
+    const anchorLeft = anchor.x - window.mozInnerScreenX;
+    const anchorTop = anchor.y - window.mozInnerScreenY;
 
-  const controller = new AbortController();
-  const signal = controller.signal;
-
-  document.documentElement.appendChild(aside);
-
-  let mouseoverListener = new Promise((resolve) => dialog.addEventListener("mouseover", ({ clientX, clientY }) => resolve({ clientX, clientY }), { once: true }));
-
-  dialog.showModal();
-
-  await new Promise((resolve) => iframe.contentWindow.addEventListener("DOMContentLoaded", resolve, { once: true }));
-
-  const iframeStyleElement = iframe.contentDocument.createElement("style");
-  iframeStyleElement.textContent = await iframeStyleRequest.text();
-  iframe.contentDocument.body.appendChild(iframeStyleElement);
-
-  const preview = iframe.contentDocument.getElementById("preview");
-  const selectAll = iframe.contentDocument.getElementById("selectAll");
-  const filenameInput = iframe.contentDocument.getElementById("filename");
-
-  let defaultFilename;
-  if (settings.defaultFilename === "unix") defaultFilename = String(Date.now());
-  else if (settings.defaultFilename === "unknown") defaultFilename = "unknown";
-  else defaultFilename = generateDefaultFilename();
-
-  if (settings.showFilenameBox) {
-    filenameInput.setAttribute("placeholder", `${defaultFilename}.png`);
-    filenameInput.value = `${defaultFilename}.png`;
-    filenameInput.setSelectionRange(0, defaultFilename.length);
-  } else {
-    filenameInput.style.display = "none";
-  }
-
-  const previewImage = new iframe.contentWindow.Image();
-  previewImage.src = iframe.contentWindow.URL.createObjectURL(clipboardImage);
-  preview.style.backgroundImage = `url(${previewImage.src})`;
-
-  selectAll.textContent = browser.i18n.getMessage("showAllFiles", "Show all files");
-
-  iframe.contentDocument.body.style.setProperty("--devicePixelRatio", iframe.contentWindow.devicePixelRatio / backgroundDevicePixelRatio);
-  root.style.setProperty("--devicePixelRatio", window.devicePixelRatio / backgroundDevicePixelRatio);
-
-  iframe.contentDocument.addEventListener(
-    "keydown",
-    (e) => {
-      if (e.key === "Escape") iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
-    },
-    { signal }
-  );
-
-  filenameInput.addEventListener(
-    "keydown",
-    (e) => {
-      if (e.key === "Enter") preview.dispatchEvent(new Event("click"));
-    },
-    { signal }
-  );
-
-  preview.addEventListener(
-    "click",
-    async () => {
-      iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
-      if (settings.clearOnPaste) browser.runtime.sendMessage({ type: "clearClipboard" });
-
-      const dataTransfer = new DataTransfer();
-
-      let filename;
-      if (filenameInput.value === `${defaultFilename}.png` || filenameInput.value.length === 0) filename = `${defaultFilename}.png`;
-      else filename = filenameInput.value;
-
-      dataTransfer.items.add(new File([clipboardImage], filename, { type: "image/png" }));
-
-      browser.runtime.sendMessage({ type: "file", token, frameId, tabId, files: dataTransfer.files });
-    },
-    { signal, once: true }
-  );
-
-  selectAll.addEventListener(
-    "click",
-    async () => {
-      iframe.contentDocument.dispatchEvent(new FocusEvent("blur"));
-
-      return showPicker();
-    },
-    { signal, once: true }
-  );
-
-  window.addEventListener(
-    "resize",
-    () => {
-      iframe.contentDocument.body.style.setProperty("--devicePixelRatio", window.devicePixelRatio / backgroundDevicePixelRatio);
-      root.style.setProperty("--devicePixelRatio", window.devicePixelRatio / backgroundDevicePixelRatio);
-    },
-    { signal }
-  );
-
-  await previewImage.decode();
-
-  window.addEventListener("visibilitychange", () => iframe.contentDocument.dispatchEvent(new FocusEvent("blur")), { signal });
-
-  iframe.contentDocument.addEventListener(
-    "blur",
-    () => {
-      controller.abort();
-      aside.remove();
-    },
-    { signal }
-  );
-
-  if (settings.showFilenameBox) filenameInput.focus();
-  else iframe.contentDocument.body.focus({ preventScroll: true });
-
-  const mouseover = await mouseoverListener;
-
-  if (mouseover.clientX + window.visualViewport.pageLeft < window.visualViewport.width * window.visualViewport.scale + window.visualViewport.pageLeft - modalWidth) {
-    root.style.setProperty("--posX", `${(100 * mouseover.clientX) / (window.visualViewport.width * window.visualViewport.scale)}%`);
-  } else {
-    root.style.setProperty("--posX", `${(100 * (window.visualViewport.width * window.visualViewport.scale - modalWidth)) / (window.visualViewport.width * window.visualViewport.scale)}%`);
-  }
-
-  if (mouseover.clientY + window.visualViewport.pageTop < window.visualViewport.height * window.visualViewport.scale + window.visualViewport.pageTop - modalHeight) {
-    root.style.setProperty("--posY", `${(100 * mouseover.clientY) / (window.visualViewport.height * window.visualViewport.scale)}%`);
-  } else {
-    root.style.setProperty("--posY", `${(100 * (mouseover.clientY - modalHeight)) / (window.visualViewport.height * window.visualViewport.scale)}%`);
-  }
-
-  const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  let keyframes = [
-    { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
-    { opacity: "1", pointerEvents: "initial" },
-  ];
-  let duration = 270;
-  let fill = "forwards";
-  let easing = "cubic-bezier(.07, .95, 0, 1)";
-
-  if (prefersReducedMotion) {
-    (easing = "cubic-bezier(0, 0, 0, 1)"), (duration = 150);
-    keyframes.shift();
-  }
-
-  root.animate(keyframes, { duration, fill, easing });
-
-  function showPicker() {
-    const decoyInput = document.createElement("input");
-
-    for (const attrName of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
-      if (inputAttributes[attrName]) decoyInput.setAttribute(attrName, inputAttributes[attrName]);
+    if (anchor.width > pickerWidth || anchor.width < pickerWidth / 2) {
+      posX = anchorLeft + (anchor.width - pickerWidth) / 2;
+    } else {
+      posX = anchorLeft;
     }
 
-    decoyInput.addEventListener("change", (e) => browser.runtime.sendMessage({ type: "file", token, frameId, tabId, files: e.target.files }), { once: true });
-    decoyInput.showPicker();
+    if (anchor.width > pickerWidth && anchor.height > pickerHeight) {
+      posY = anchorTop + screenMargin;
+    } else {
+      const spaceAbove = anchorTop;
+      const spaceBelow = winHeight - (anchorTop + anchor.height);
+      const useAbove = spaceAbove >= pickerHeight || (spaceAbove > spaceBelow && spaceBelow < pickerHeight);
+
+      posY = useAbove ? anchorTop - pickerHeight : anchorTop + anchor.height;
+    }
+  } else {
+    const mouse = await mousePromise;
+    posX = mouse.clientX;
+
+    const spaceBelow = winHeight - mouse.clientY;
+
+    if (spaceBelow >= pickerHeight + screenMargin) {
+      posY = mouse.clientY;
+    } else {
+      posY = mouse.clientY - pickerHeight;
+    }
   }
+
+  return {
+    posX: clamp(posX, screenMargin, maxX),
+    posY: clamp(posY, screenMargin, maxY),
+  };
+}
+
+function showPicker(inputAttributes) {
+  const decoyInput = document.createElement("input");
+  for (const attrName of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
+    if (inputAttributes[attrName]) decoyInput.setAttribute(attrName, inputAttributes[attrName]);
+  }
+
+  decoyInput.addEventListener(
+    "change",
+    (e) => {
+      browser.runtime.sendMessage({ type: "file", files: e.target.files });
+    },
+    { once: true }
+  );
+
+  decoyInput.showPicker();
 }
 
 function generateDefaultFilename() {
-  const date = new Date(Date.now());
-  const currentDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000).toISOString();
-  const filenameDate = currentDateTime.substring(0, 10);
-  const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, "-");
+  const now = Temporal.Now.plainDateTimeISO();
+  return `img-${now.toString({ fractionalSecondDigits: 0 }).replace(/[:T]/g, "-")}`;
+}
 
-  return `img-${filenameDate}-${filenameTime}`;
+function waitforStableLayout() {
+  if (window.visualViewport.width >= PICKER_WIDTH) {
+    return;
+  }
+
+  return new Promise((resolve) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    const onResize = () => {
+      if (window.visualViewport.width >= PICKER_WIDTH) {
+        controller.abort();
+        resolve();
+      }
+    };
+    window.visualViewport.addEventListener("resize", onResize, { signal });
+  });
+}
+
+const mouseoverPromise = new Promise((resolve) => document.addEventListener("mouseover", resolve, { once: true }));
+
+const [initData, settings] = await Promise.all([
+  browser.runtime.sendMessage({ type: "initPopup" }),
+  getSettings(),
+  waitforStableLayout(),
+]);
+
+if (!initData) {
+  browser.runtime.sendMessage({ type: "cancel" });
+} else {
+  const { clipboardImage, inputAttributes, anchor, backgroundDevicePixelRatio } = initData;
+
+  const root = document.getElementById("root");
+  const filenameContainer = document.getElementById("filenameContainer");
+  const filenameDiv = document.getElementById("filenameBase");
+  const filenameExt = document.getElementById("filenameExt");
+  const formatToggle = document.getElementById("formatToggle");
+  const preview = document.getElementById("preview");
+  const selectAll = document.getElementById("selectAll");
+
+  let currentBlob = clipboardImage;
+  let previewUrl = null;
+
+  let defaultFilename;
+  if (settings.defaultFilename === "unix") {
+    defaultFilename = String(Date.now());
+  } else if (settings.defaultFilename === "unknown") {
+    defaultFilename = "unknown";
+  } else if (settings.defaultFilename === "custom") {
+    defaultFilename = settings.customFilenameText || "image";
+  } else {
+    defaultFilename = generateDefaultFilename();
+  }
+
+  const jpegQuality = settings.jpegQuality / 100;
+
+  filenameDiv.textContent = defaultFilename;
+  filenameDiv.dataset.placeholder = defaultFilename;
+
+  const updateEmptyState = () => {
+    filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
+  };
+  filenameDiv.addEventListener("input", updateEmptyState);
+  updateEmptyState();
+
+  if (!settings.showFilenameBox) {
+    filenameContainer.style.display = "none";
+  }
+
+  const setFileType = async (type, saveToStorage = false) => {
+    let newBlob;
+
+    if (type === "jpeg") {
+      try {
+        newBlob = await convertToJpeg(clipboardImage, jpegQuality);
+        filenameExt.textContent = ".jpg";
+        formatToggle.textContent = "JPG";
+      } catch (e) {
+        console.error("JPG conversion failed", e);
+        return setFileType("png", saveToStorage);
+      }
+    } else {
+      newBlob = clipboardImage;
+      filenameExt.textContent = ".png";
+      formatToggle.textContent = "PNG";
+    }
+
+    currentBlob = newBlob;
+    settings.defaultFileType = type;
+
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(currentBlob);
+    preview.style.backgroundImage = `url(${previewUrl})`;
+
+    const currentText = filenameDiv.textContent;
+    let newText = currentText;
+
+    if (type === "jpeg") {
+      newText = currentText.replace(/\.png$/i, "");
+    } else {
+      newText = currentText.replace(/\.jpg$/i, "");
+    }
+
+    if (newText !== currentText) {
+      const isFocused = document.activeElement === filenameDiv;
+      let caretPos = 0;
+
+      if (isFocused) {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          if (range.startContainer.nodeType === Node.TEXT_NODE) {
+            caretPos = range.startOffset;
+          } else {
+            caretPos = 0;
+          }
+        }
+      }
+
+      filenameDiv.textContent = newText;
+
+      if (isFocused) {
+        const textNode = filenameDiv.firstChild;
+        if (textNode) {
+          const range = document.createRange();
+          const safePos = Math.min(caretPos, textNode.length);
+          range.setStart(textNode, safePos);
+          range.setEnd(textNode, safePos);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          filenameDiv.focus();
+        }
+      }
+    }
+
+    updateEmptyState();
+
+    if (saveToStorage) {
+      browser.storage.local.set({ defaultFileType: type });
+    }
+  };
+
+  await setFileType(settings.defaultFileType, false);
+
+  selectAll.textContent = browser.i18n.getMessage("showAllFiles");
+
+  const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
+  document.body.style.setProperty("--devicePixelRatio", dpr);
+
+  formatToggle.addEventListener("pointerdown", async (e) => {
+    if (e.button === 2) return;
+    e.preventDefault();
+
+    if (formatToggle.disabled) return;
+    formatToggle.disabled = true;
+
+    const newType = settings.defaultFileType === "jpeg" ? "png" : "jpeg";
+    await setFileType(newType, true);
+
+    formatToggle.disabled = false;
+  });
+
+  preview.addEventListener("click", () => {
+    if (settings.clearOnPaste) browser.runtime.sendMessage({ type: "clearClipboard" });
+    const dataTransfer = new DataTransfer();
+
+    let base = filenameDiv.textContent.trim();
+    if (base.length === 0) base = defaultFilename;
+
+    const isPng = currentBlob.type === "image/png";
+    const ext = isPng ? ".png" : ".jpg";
+
+    if (base.toLowerCase().endsWith(ext)) {
+      base = base.substring(0, base.length - 4);
+    }
+
+    const filename = base + ext;
+
+    dataTransfer.items.add(
+      new File([currentBlob], filename, {
+        type: currentBlob.type,
+      })
+    );
+    browser.runtime.sendMessage({ type: "file", files: dataTransfer.files });
+  });
+
+  selectAll.addEventListener("click", () => {
+    showPicker(inputAttributes);
+  });
+
+  filenameContainer.addEventListener("click", () => {
+    filenameDiv.focus();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      browser.runtime.sendMessage({ type: "cancel" });
+    }
+  });
+
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target === document.body) {
+      browser.runtime.sendMessage({ type: "cancel" });
+    }
+  });
+
+  filenameDiv.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      preview.click();
+    }
+  });
+
+  if (settings.showFilenameBox) {
+    filenameDiv.focus();
+    selectBaseName(filenameDiv);
+  } else {
+    document.body.tabIndex = -1;
+    document.body.focus();
+  }
+
+  const modalWidth = (PICKER_WIDTH * backgroundDevicePixelRatio) / window.devicePixelRatio;
+  const modalHeight = (PICKER_HEIGHT * backgroundDevicePixelRatio) / window.devicePixelRatio;
+
+  const { posX, posY } = await calculatePickerPosition(anchor, mouseoverPromise, modalWidth, modalHeight, SCREEN_MARGIN);
+
+  root.style.position = "fixed";
+  root.style.left = `${posX}px`;
+  root.style.top = `${posY}px`;
+  root.style.margin = "0";
+  root.style.opacity = "1";
+
+  const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (!prefersReducedMotion) {
+    root.animate(
+      [
+        { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
+        { opacity: "1", transform: "none" },
+      ],
+      {
+        duration: ANIMATION_DURATION,
+        easing: "cubic-bezier(.07, .95, 0, 1)",
+        fill: "forwards",
+      }
+    );
+  } else {
+    root.style.opacity = "1";
+  }
 }

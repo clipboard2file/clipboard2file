@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Alle Dateien anzeigen"
+  "settingsTitle": {
+    "message": "Clipboard2File-Einstellungen"
   },
   "clearOnPaste": {
-    "message": "Zwischenablage beim Einfügen löschen?"
+    "message": "Zwischenablage nach dem Hochladen leeren"
   },
   "showFilenameBox": {
-    "message": "Textfeld zum Bearbeiten des Dateinamens anzeigen?"
+    "message": "Textfeld zum Bearbeiten des Dateinamens anzeigen"
   },
   "defaultFilename": {
-    "message": "Wie soll der Standard-Dateiname lauten?"
+    "message": "Standard-Dateiname"
   },
-  "true": { "message": "Ja" },
-  "false": { "message": "Nein" },
+  "defaultFileType": {
+    "message": "Standard-Bildformat"
+  },
+  "jpegQuality": {
+    "message": "JPG-Qualität"
+  },
+  "customFilenameLabel": {
+    "message": "Benutzerdefinierter Dateiname"
+  },
+  "customPlaceholder": {
+    "message": "Benutzerdefinierten Dateinamen hier eingeben"
+  },
   "formattedTime": { "message": "Formatierte Zeit" },
-  "unixTimestamp": { "message": "UNIX-Zeitstempel" }
+  "unixTimestamp": { "message": "UNIX-Zeitstempel" },
+  "custom": { "message": "Benutzerdefiniert" },
+  "save": { "message": "Speichern" },
+  "showAllFiles": { "message": "Alle Dateien anzeigen" }
 }

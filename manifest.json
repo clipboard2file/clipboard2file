@@ -2,17 +2,17 @@
   "manifest_version": 2,
   "default_locale": "en",
   "name": "Clipboard2File",
-  "version": "3.7",
+  "version": "4.0",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "./icons/clipboard2file.svg"
   },
   "options_ui": {
-    "page": "./settings/settings.html"
+    "page": "./settings/options.html"
   },
   "browser_specific_settings": {
     "gecko": {
-      "strict_min_version": "110.0"
+      "strict_min_version": "140.0"
     }
   },
   "permissions": ["<all_urls>", "clipboardRead", "clipboardWrite", "storage"],
@@ -25,12 +25,14 @@
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true,
+      "match_origin_as_fallback": true,
       "js": ["./content/all_frames.js"]
     },
     {
       "matches": ["<all_urls>"],
       "run_at": "document_start",
       "all_frames": false,
+      "match_origin_as_fallback": true,
       "js": ["./content/parent_frame.js"]
     }
   ]

@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Показать все файлы"
+  "settingsTitle": {
+    "message": "Настройки Clipboard2File"
   },
   "clearOnPaste": {
-    "message": "Очистить буфер обмена при вставке?"
+    "message": "Очистить буфер обмена после загрузки"
   },
   "showFilenameBox": {
-    "message": "Показать текстовое поле для редактирования имени файла?"
+    "message": "Показать поле для редактирования имени файла"
   },
   "defaultFilename": {
-    "message": "Каким должно быть имя файла по умолчанию?"
+    "message": "Имя файла по умолчанию"
   },
-  "true": { "message": "Да" },
-  "false": { "message": "Нет" },
+  "defaultFileType": {
+    "message": "Формат изображения по умолчанию"
+  },
+  "jpegQuality": {
+    "message": "Качество JPG"
+  },
+  "customFilenameLabel": {
+    "message": "Пользовательское имя файла"
+  },
+  "customPlaceholder": {
+    "message": "Введите имя файла здесь"
+  },
   "formattedTime": { "message": "Форматированное время" },
-  "unixTimestamp": { "message": "Необработанная метка времени" }
+  "unixTimestamp": { "message": "Необработанная метка времени" },
+  "custom": { "message": "Пользовательское" },
+  "save": { "message": "Сохранить" },
+  "showAllFiles": { "message": "Показать все файлы" }
 }

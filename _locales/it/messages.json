@@ -1,18 +1,31 @@
 {
-  "showAllFiles": {
-    "message": "Mostra tutti i file"
+  "settingsTitle": {
+    "message": "Impostazioni Clipboard2File"
   },
   "clearOnPaste": {
-    "message": "Cancellare gli appunti quando si incolla?"
+    "message": "Cancella appunti dopo il caricamento"
   },
   "showFilenameBox": {
-    "message": "Mostrare la casella di testo per la modifica del nome del file?"
+    "message": "Mostra casella di testo per modificare il nome del file"
   },
   "defaultFilename": {
-    "message": "Quale dovrebbe essere il nome predefinito del file?"
+    "message": "Nome file predefinito"
   },
-  "true": { "message": "Sì" },
-  "false": { "message": "No" },
-  "formattedTime": { "message": "Tempo formattato" },
-  "unixTimestamp": { "message": "Tempo grezzo" }
+  "defaultFileType": {
+    "message": "Formato immagine predefinito"
+  },
+  "jpegQuality": {
+    "message": "Qualità JPG"
+  },
+  "customFilenameLabel": {
+    "message": "Nome file personalizzato"
+  },
+  "customPlaceholder": {
+    "message": "Inserisci qui il nome file personalizzato"
+  },
+  "formattedTime": { "message": "Ora formattata" },
+  "unixTimestamp": { "message": "Tempo grezzo" },
+  "custom": { "message": "Personalizzato" },
+  "save": { "message": "Salva" },
+  "showAllFiles": { "message": "Mostra tutti i file" }
 }
