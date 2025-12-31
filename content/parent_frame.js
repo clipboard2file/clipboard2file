@@ -24,8 +24,6 @@ browser.runtime.onMessage.addListener((data) => {
 
     document.documentElement.appendChild(host);
 
-    window.addEventListener("pagehide", console.log);
-
     port.onDisconnect.addListener(() => {
       dialog.close();
       host.remove();

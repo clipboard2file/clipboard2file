@@ -116,6 +116,12 @@ function waitforStableLayout() {
 
 const mouseoverPromise = new Promise((resolve) => document.addEventListener("mouseover", resolve, { once: true }));
 
+window.addEventListener("pageshow", ({ persisted }) => {
+  if (persisted) {
+    browser.runtime.sendMessage({ type: "cancel" });
+  }
+});
+
 const [initData, settings] = await Promise.all([
   browser.runtime.sendMessage({ type: "initPopup" }),
   getSettings(),
