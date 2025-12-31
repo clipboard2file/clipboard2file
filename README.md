@@ -1,7 +1,7 @@
 <h1 align="left">
   <sub>
     <img
-      src="https://raw.githubusercontent.com/vord1080/clipboard2file/main/icons/clipboard2file.png"
+      src="./icons/clipboard2file.svg"
       height="38"
       width="38"
     />
