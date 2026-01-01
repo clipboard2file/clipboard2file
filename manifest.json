@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "default_locale": "en",
   "name": "Clipboard2File",
-  "version": "4.0",
+  "version": "4.1",
   "description": "Instantly upload pictures from your clipboard!",
   "icons": {
     "549": "./icons/clipboard2file.svg"
@@ -17,7 +17,8 @@
   },
   "permissions": ["<all_urls>", "clipboardRead", "clipboardWrite", "storage"],
   "background": {
-    "scripts": ["./background/background.js"]
+    "scripts": ["./background/background.js"],
+    "type": "module"
   },
   "content_scripts": [
     {

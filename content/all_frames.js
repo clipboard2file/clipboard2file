@@ -4,7 +4,9 @@ window.addEventListener("click", (event) => {
     target = event.target;
   } else {
     try {
-      if (event.originalTarget.matches("input[type=file]:not([webkitdirectory])")) {
+      if (
+        event.originalTarget.matches("input[type=file]:not([webkitdirectory])")
+      ) {
         target = event.originalTarget;
       }
     } catch {}
@@ -34,7 +36,11 @@ exportFunction(
 
 exportFunction(
   function () {
-    if (!this.isConnected && this.matches("[type=file]:not([webkitdirectory])") && navigator.userActivation.isActive) {
+    if (
+      !this.isConnected &&
+      this.matches("[type=file]:not([webkitdirectory])") &&
+      navigator.userActivation.isActive
+    ) {
       return handleInputElement(this);
     } else {
       return this.click();
@@ -46,7 +52,10 @@ exportFunction(
 
 exportFunction(
   function () {
-    if (this.matches("[type=file]:not([webkitdirectory])") && navigator.userActivation.isActive) {
+    if (
+      this.matches("[type=file]:not([webkitdirectory])") &&
+      navigator.userActivation.isActive
+    ) {
       return handleInputElement(this);
     } else {
       try {
@@ -62,7 +71,11 @@ exportFunction(
 
 exportFunction(
   function (event) {
-    if (event.type === "click" && this.matches("[type=file]:not([webkitdirectory])") && navigator.userActivation.isActive) {
+    if (
+      event.type === "click" &&
+      this.matches("[type=file]:not([webkitdirectory])") &&
+      navigator.userActivation.isActive
+    ) {
       handleInputElement(this, event);
       return true;
     } else {
@@ -74,7 +87,7 @@ exportFunction(
 );
 
 function handleInputElement(input, event) {
-  const port = browser.runtime.connect({ name: "all_frames" });
+  const port = browser.runtime.connect({ name: "input" });
 
   port.onMessage.addListener((data) => {
     if (data.type === "showPicker") {
@@ -82,7 +95,7 @@ function handleInputElement(input, event) {
       port.disconnect();
       return;
     }
-    if (data.type === "fileChanged") {
+    if (data.type === "files") {
       input.files = structuredClone(data.files);
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -100,7 +113,7 @@ function handleInputElement(input, event) {
   const positionData = collectAnchorData(input, event);
 
   port.postMessage({
-    type: "openModal",
+    type: "openPopup",
     inputAttributes,
     positionData,
   });
@@ -122,7 +135,10 @@ function collectAnchorData(input, event) {
   };
 
   if (event) {
-    const target = event.currentTarget instanceof Element ? event.currentTarget : event.explicitOriginalTarget;
+    const target =
+      event.currentTarget instanceof Element
+        ? event.currentTarget
+        : event.explicitOriginalTarget;
     let targetRect = null;
 
     if (target?.getBoundingClientRect) {

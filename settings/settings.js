@@ -61,7 +61,7 @@ export const options = [
   },
 ];
 
-export async function getSettings() {
+export async function getAllSettings() {
   const defaults = options.reduce((acc, curr) => {
     acc[curr.key] = curr.default;
     return acc;
@@ -69,4 +69,11 @@ export async function getSettings() {
 
   const stored = await browser.storage.local.get(Object.keys(defaults));
   return { ...defaults, ...stored };
+}
+
+export async function getSetting(key) {
+  const option = options.find((o) => o.key === key);
+  if (!option) return null;
+  const stored = await browser.storage.local.get(key);
+  return stored[key] !== undefined ? stored[key] : option.default;
 }

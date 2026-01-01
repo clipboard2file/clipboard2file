@@ -1,6 +1,6 @@
 browser.runtime.onMessage.addListener((data) => {
   if (data.type === "spawn_popup") {
-    const port = browser.runtime.connect({ name: "parent_frame" });
+    const port = browser.runtime.connect({ name: "parent" });
 
     const controller = new AbortController();
     const { signal } = controller;
@@ -25,7 +25,16 @@ browser.runtime.onMessage.addListener((data) => {
 
         document.documentElement.appendChild(host);
 
-        const popupUrl = browser.runtime.getURL(`content/popup.html`);
+        const params = new URLSearchParams();
+        params.set("scale", window.visualViewport.scale);
+        params.set("offsetLeft", window.visualViewport.offsetLeft);
+        params.set("offsetTop", window.visualViewport.offsetTop);
+        params.set("width", window.visualViewport.width);
+        params.set("height", window.visualViewport.height);
+
+        const popupUrl = browser.runtime.getURL(
+          `content/popup.html?${params.toString()}`
+        );
         iframe.contentWindow.location.replace(popupUrl);
 
         dialog.showModal();

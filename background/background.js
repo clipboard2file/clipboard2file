@@ -1,15 +1,12 @@
-const { runtime, tabs } = browser;
+import { getSetting } from "../settings/settings.js";
 
 const pendingSessions = new Map();
 const activeSessions = new Map();
 
-runtime.onMessage.addListener((data, sender) => {
+browser.runtime.onMessage.addListener((data, sender) => {
   const tabId = sender.tab?.id;
 
   const actions = {
-    clearClipboard: async function () {
-      return navigator.clipboard.writeText("");
-    },
     initPopup: function () {
       const session = activeSessions.get(tabId);
       if (session) {
@@ -20,14 +17,27 @@ runtime.onMessage.addListener((data, sender) => {
       }
       return Promise.resolve();
     },
-    file: function () {
+    files: async function () {
       const session = activeSessions.get(tabId);
       if (session) {
         try {
           session.inputPort.postMessage({
-            type: "fileChanged",
+            type: "files",
             files: data.files,
           });
+          if (await getSetting("clearOnPaste")) {
+            await navigator.clipboard.writeText("");
+          }
+        } catch (e) {}
+        cleanupSession(tabId);
+      }
+      return;
+    },
+    showPicker: function () {
+      const session = activeSessions.get(tabId);
+      if (session) {
+        try {
+          session.inputPort.postMessage({ type: "showPicker" });
         } catch (e) {}
         cleanupSession(tabId);
       }
@@ -49,15 +59,18 @@ runtime.onMessage.addListener((data, sender) => {
   return false;
 });
 
-runtime.onConnect.addListener((port) => {
+browser.runtime.onConnect.addListener((port) => {
   const tabId = port.sender?.tab?.id;
   if (!tabId) return;
 
-  if (port.name === "all_frames") {
-    cleanupSession(tabId);
+  if (port.name === "input") {
+    if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
+      port.disconnect();
+      return;
+    }
 
     port.onMessage.addListener(async (msg) => {
-      if (msg.type === "openModal") {
+      if (msg.type === "openPopup") {
         const items = await navigator.clipboard.read();
         const img = items.find((i) => i.types.includes("image/png"));
         let blob = img ? await img.getType("image/png") : null;
@@ -68,25 +81,33 @@ runtime.onConnect.addListener((port) => {
           return;
         }
 
-        cleanupSession(tabId);
+        if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
+          port.disconnect();
+          return;
+        }
 
         const tagName = generateElementName();
 
         const context = {
           inputPort: port,
           data: {
+            isTopFrame: port.sender.frameId === 0,
             inputAttributes: msg.inputAttributes,
             clipboardImage: blob,
             positionData: msg.positionData,
           },
           tagName: tagName,
-          cssCode: `${tagName} { all: unset !important; }`,
+          cssCode: `${tagName},
+                    ${tagName}::before,
+                    ${tagName}::after {
+                      all: unset !important;
+                    }`,
         };
 
         pendingSessions.set(tabId, context);
 
         try {
-          await tabs.insertCSS(tabId, {
+          await browser.tabs.insertCSS(tabId, {
             code: context.cssCode,
             cssOrigin: "user",
           });
@@ -94,18 +115,16 @@ runtime.onConnect.addListener((port) => {
           console.error("Failed to inject user CSS", e);
         }
 
-        tabs.sendMessage(tabId, { type: "spawn_popup", tabId, tagName });
+        browser.tabs.sendMessage(
+          tabId,
+          { type: "spawn_popup", tabId, tagName },
+          { frameId: 0 }
+        );
       }
     });
 
-    port.onDisconnect.addListener(() => {
-      const active = activeSessions.get(tabId);
-      const pending = pendingSessions.get(tabId);
-
-      if (active && active.inputPort === port) cleanupSession(tabId);
-      else if (pending && pending.inputPort === port) cleanupSession(tabId);
-    });
-  } else if (port.name === "parent_frame") {
+    port.onDisconnect.addListener(() => cleanupSession(tabId));
+  } else if (port.name === "parent") {
     const pending = pendingSessions.get(tabId);
 
     if (!pending) {
@@ -115,13 +134,19 @@ runtime.onConnect.addListener((port) => {
 
     const session = {
       ...pending,
-      pickerPort: port,
+      parentPort: port,
     };
 
     activeSessions.set(tabId, session);
     pendingSessions.delete(tabId);
 
     port.onDisconnect.addListener(() => cleanupSession(tabId));
+  } else if (port.name === "popup") {
+    const session = activeSessions.get(tabId);
+    if (session) {
+      session.popupPort = port;
+      port.onDisconnect.addListener(() => cleanupSession(tabId));
+    }
   }
 });
 
@@ -130,17 +155,31 @@ function cleanupSession(tabId) {
   const pending = pendingSessions.get(tabId);
 
   if (active) {
-    tabs.removeCSS(tabId, { code: active.cssCode, cssOrigin: "user" }).catch(() => {});
-    active.inputPort.disconnect();
-    active.pickerPort.disconnect();
     activeSessions.delete(tabId);
+    browser.tabs
+      .removeCSS(tabId, { code: active.cssCode, cssOrigin: "user" })
+      .catch(() => {});
+
+    try {
+      active.inputPort.disconnect();
+    } catch (e) {}
+    try {
+      active.parentPort.disconnect();
+    } catch (e) {}
+    try {
+      active.popupPort?.disconnect();
+    } catch (e) {}
     return;
   }
 
   if (pending) {
-    tabs.removeCSS(tabId, { code: pending.cssCode, cssOrigin: "user" }).catch(() => {});
-    pending.inputPort.disconnect();
     pendingSessions.delete(tabId);
+    browser.tabs
+      .removeCSS(tabId, { code: pending.cssCode, cssOrigin: "user" })
+      .catch(() => {});
+    try {
+      pending.inputPort.disconnect();
+    } catch (e) {}
   }
 }
 
@@ -154,7 +193,8 @@ function generateElementName(length = 10) {
   }
   const result = new Array(length);
   result[0] = rand(letters);
-  const dashIndex = 1 + (crypto.getRandomValues(new Uint8Array(1))[0] % (length - 2));
+  const dashIndex =
+    1 + (crypto.getRandomValues(new Uint8Array(1))[0] % (length - 2));
   result[dashIndex] = "-";
   for (let i = 1; i < length; i++) {
     if (result[i] === "-") continue;

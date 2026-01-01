@@ -1,4 +1,4 @@
-import { options, getSettings } from "./settings.js";
+import { options, getAllSettings, getSetting } from "./settings.js";
 
 const root = document.getElementById("root");
 
@@ -15,7 +15,7 @@ await refreshUI();
 browser.storage.local.onChanged.addListener(refreshUI);
 
 async function refreshUI() {
-  const settings = await getSettings();
+  const settings = await getAllSettings();
 
   for (const item of options) {
     updateWidgetValue(item, settings);
@@ -124,7 +124,9 @@ function createSelect(container, item) {
   item.options.forEach((opt) => {
     const option = document.createElement("option");
     option.value = opt.value;
-    option.textContent = opt.l10nId ? browser.i18n.getMessage(opt.l10nId) : opt.text;
+    option.textContent = opt.l10nId
+      ? browser.i18n.getMessage(opt.l10nId)
+      : opt.text;
     select.appendChild(option);
   });
 
@@ -132,9 +134,10 @@ function createSelect(container, item) {
     const newValue = e.target.value;
 
     if (item.key === "defaultFilename" && newValue === "custom") {
-      const currentSettings = await getSettings();
-      const inputOption = options.find((o) => o.type === "customInputWithButton");
-      const savedText = inputOption ? currentSettings[inputOption.key] : "";
+      const inputOption = options.find(
+        (o) => o.type === "customInputWithButton"
+      );
+      const savedText = inputOption ? await getSetting(inputOption.key) : "";
 
       if (savedText && savedText.trim().length > 0) {
         const inputGroup = document.getElementById(`group-${inputOption.key}`);
@@ -188,8 +191,16 @@ function createCustomInput(container, item) {
   button.id = `btn-${item.key}`;
 
   const saveInput = async () => {
-    const val = input.value.trim();
+    let val = input.value.trim();
+
+    val = val.replace(/\.(png|jpg)$/i, "");
+    val = val.trim();
+
     if (val) {
+      if (input.value !== val) {
+        input.value = val;
+      }
+
       await browser.storage.local.set({ [item.key]: val });
       await browser.storage.local.set({ defaultFilename: "custom" });
       button.disabled = true;

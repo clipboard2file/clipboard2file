@@ -1,171 +1,25 @@
-import { getSettings } from "../settings/settings.js";
+import { getAllSettings } from "../settings/settings.js";
 
-const PICKER_WIDTH = 300;
-const PICKER_HEIGHT = 250;
-const SCREEN_MARGIN = 8;
-const ANIMATION_DURATION = 270;
+browser.runtime.connect({ name: "popup" });
 
-async function convertToJpeg(blob, quality) {
-  const bitmap = await createImageBitmap(blob);
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const ctx = canvas.getContext("bitmaprenderer", { alpha: false });
-  ctx.transferFromImageBitmap(bitmap);
-  return await canvas.convertToBlob({
-    type: "image/jpeg",
-    quality: quality,
-  });
-}
+const POPUP_WIDTH_PX = 300;
+const POPUP_HEIGHT_PX = 250;
+const SCREEN_MARGIN_PX = 8;
+const ANIMATION_DURATION_MS = 270;
 
-function selectBaseName(element) {
-  if (!element.firstChild) return;
-  const range = document.createRange();
-  range.selectNodeContents(element);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
-}
+const params = new URLSearchParams(window.location.search);
 
-const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+const parentVisualViewport = {
+  scale: parseFloat(params.get("scale")),
+  offsetLeft: parseFloat(params.get("offsetLeft")),
+  offsetTop: parseFloat(params.get("offsetTop")),
+  width: parseFloat(params.get("width")),
+  height: parseFloat(params.get("height")),
+};
 
-function resolveAnchor(data) {
-  const { inputRect, win, event } = data;
-  const { width: vw, height: vh } = window.visualViewport;
-
-  const isVisible = (r) => {
-    return r.top < vh && r.top + r.height > 0 && r.left < vw && r.left + r.width > 0;
-  };
-
-  const hasValidCoords = event && (event.screenX !== 0 || event.clientX !== 0);
-  const offsetX = hasValidCoords ? event.screenX - event.clientX : win.mozInnerScreenX;
-  const offsetY = hasValidCoords ? event.screenY - event.clientY : win.mozInnerScreenY;
-
-  const toScreenRect = (rect) => ({
-    x: rect.left + offsetX,
-    y: rect.top + offsetY,
-    width: rect.width,
-    height: rect.height,
-  });
-
-  const isHuge = (w, h) => w > vw * 0.8 && h > vh * 0.8;
-
-  if (event?.targetRect?.width > 0 && isVisible(event.targetRect) && !isHuge(event.targetRect.width, event.targetRect.height)) {
-    return toScreenRect(event.targetRect);
-  }
-
-  if ((inputRect.width > 0 || inputRect.height > 0) && isVisible(inputRect) && !isHuge(inputRect.width, inputRect.height)) {
-    return toScreenRect(inputRect);
-  }
-
-  if (event && event.clientX !== 0 && event.clientY !== 0) {
-    return {
-      x: event.clientX + offsetX,
-      y: event.clientY + offsetY,
-      width: 0,
-      height: 0,
-    };
-  }
-
-  return null;
-}
-
-async function calculatePickerPosition(anchor, mousePromise, pickerWidth, pickerHeight, screenMargin) {
-  const viewport = window.visualViewport;
-
-  let targetRect = null;
-
-  if (anchor) {
-    targetRect = {
-      left: anchor.x - window.mozInnerScreenX,
-      top: anchor.y - window.mozInnerScreenY,
-      width: anchor.width,
-      height: anchor.height,
-    };
-  } else {
-    const mouse = await Promise.race([mousePromise, new Promise((resolve) => setTimeout(resolve, 150))]);
-
-    if (mouse) {
-      targetRect = { left: mouse.clientX, top: mouse.clientY, width: 0, height: 0 };
-    }
-  }
-
-  if (!targetRect) {
-    return {
-      posX: (viewport.width - pickerWidth) / 2,
-      posY: (viewport.height - pickerHeight) / 2,
-    };
-  }
-
-  let posX = targetRect.left;
-
-  if (targetRect.width > 0) {
-    const shouldCenter = targetRect.width > pickerWidth || targetRect.width < pickerWidth / 2;
-    if (shouldCenter) {
-      posX = targetRect.left + (targetRect.width - pickerWidth) / 2;
-    }
-  }
-
-  let posY;
-
-  const isSubstantiallyLarger = targetRect.width > pickerWidth * 2 && targetRect.height > pickerHeight * 2;
-
-  if (isSubstantiallyLarger) {
-    posY = targetRect.top + screenMargin;
-  } else {
-    const spaceAbove = targetRect.top;
-    const spaceBelow = viewport.height - (targetRect.top + targetRect.height);
-
-    const placeBelow = spaceBelow >= pickerHeight || spaceBelow > spaceAbove;
-
-    posY = placeBelow ? targetRect.top + targetRect.height : targetRect.top - pickerHeight;
-  }
-
-  return {
-    posX: clamp(posX, screenMargin, viewport.width - pickerWidth - screenMargin),
-    posY: clamp(posY, screenMargin, viewport.height - pickerHeight - screenMargin),
-  };
-}
-
-function showPicker(inputAttributes) {
-  const decoyInput = document.createElement("input");
-  for (const attrName of ["accept", "capture", "multiple", "type", "webkitdirectory"]) {
-    if (inputAttributes[attrName]) decoyInput.setAttribute(attrName, inputAttributes[attrName]);
-  }
-
-  decoyInput.addEventListener(
-    "change",
-    (e) => {
-      browser.runtime.sendMessage({ type: "file", files: e.target.files });
-    },
-    { once: true }
-  );
-
-  decoyInput.showPicker();
-}
-
-function generateDefaultFilename() {
-  const now = Temporal.Now.plainDateTimeISO();
-  return `img-${now.toString({ fractionalSecondDigits: 0 }).replace(/[:T]/g, "-")}`;
-}
-
-function waitforStableLayout() {
-  if (window.visualViewport.width >= PICKER_WIDTH) {
-    return;
-  }
-
-  return new Promise((resolve) => {
-    const controller = new AbortController();
-    const { signal } = controller;
-    const onResize = () => {
-      if (window.visualViewport.width >= PICKER_WIDTH) {
-        controller.abort();
-        resolve();
-      }
-    };
-    window.visualViewport.addEventListener("resize", onResize, { signal });
-  });
-}
-
-const mouseoverPromise = new Promise((resolve) => document.addEventListener("mouseover", resolve, { once: true }));
+const mouseoverPromise = new Promise((resolve) =>
+  document.addEventListener("mouseover", resolve, { once: true })
+);
 
 window.addEventListener("pageshow", ({ persisted }) => {
   if (persisted) {
@@ -175,14 +29,20 @@ window.addEventListener("pageshow", ({ persisted }) => {
 
 const [initData, settings] = await Promise.all([
   browser.runtime.sendMessage({ type: "initPopup" }),
-  getSettings(),
+  getAllSettings(),
   waitforStableLayout(),
 ]);
 
 if (!initData) {
   browser.runtime.sendMessage({ type: "cancel" });
 } else {
-  const { clipboardImage, inputAttributes, positionData, backgroundDevicePixelRatio } = initData;
+  const {
+    clipboardImage,
+    positionData,
+    backgroundDevicePixelRatio,
+    inputAttributes,
+    isTopFrame,
+  } = initData;
 
   const root = document.getElementById("root");
   const filenameContainer = document.getElementById("filenameContainer");
@@ -197,7 +57,7 @@ if (!initData) {
 
   let defaultFilename;
   if (settings.defaultFilename === "unix") {
-    defaultFilename = String(Date.now());
+    defaultFilename = String(Temporal.Now.instant().epochMilliseconds);
   } else if (settings.defaultFilename === "unknown") {
     defaultFilename = "unknown";
   } else if (settings.defaultFilename === "custom") {
@@ -249,11 +109,7 @@ if (!initData) {
     const currentText = filenameDiv.textContent;
     let newText = currentText;
 
-    if (type === "jpeg") {
-      newText = currentText.replace(/\.png$/i, "");
-    } else {
-      newText = currentText.replace(/\.jpg$/i, "");
-    }
+    newText = currentText.replace(/\.(png|jpg)$/i, "");
 
     if (newText !== currentText) {
       const isFocused = document.activeElement === filenameDiv;
@@ -323,7 +179,6 @@ if (!initData) {
   });
 
   preview.addEventListener("click", () => {
-    if (settings.clearOnPaste) browser.runtime.sendMessage({ type: "clearClipboard" });
     const dataTransfer = new DataTransfer();
 
     let base = filenameDiv.textContent.trim();
@@ -343,11 +198,16 @@ if (!initData) {
         type: currentBlob.type,
       })
     );
-    browser.runtime.sendMessage({ type: "file", files: dataTransfer.files });
+    browser.runtime.sendMessage({ type: "files", files: dataTransfer.files });
   });
 
   selectAll.addEventListener("click", () => {
-    showPicker(inputAttributes);
+    root.style.opacity = "0";
+    if (isTopFrame) {
+      browser.runtime.sendMessage({ type: "showPicker" });
+    } else {
+      showPicker(inputAttributes);
+    }
   });
 
   filenameContainer.addEventListener("click", () => {
@@ -379,29 +239,317 @@ if (!initData) {
     selectBaseName(filenameDiv);
   }
 
-  const modalWidth = (PICKER_WIDTH * backgroundDevicePixelRatio) / window.devicePixelRatio;
-  const modalHeight = (PICKER_HEIGHT * backgroundDevicePixelRatio) / window.devicePixelRatio;
+  const popupWidth =
+    (POPUP_WIDTH_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
+  const popupHeight =
+    (POPUP_HEIGHT_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
 
-  const anchor = resolveAnchor(positionData);
-  const { posX, posY } = await calculatePickerPosition(anchor, mouseoverPromise, modalWidth, modalHeight, SCREEN_MARGIN);
+  const anchor = resolveAnchor({ ...positionData, isTopFrame });
+  const { posX, posY } = await calculatePopupPosition(
+    anchor,
+    mouseoverPromise,
+    popupWidth,
+    popupHeight,
+    SCREEN_MARGIN_PX
+  );
 
-  root.style.left = `${(posX / window.visualViewport.width) * 100}%`;
-  root.style.top = `${(posY / window.visualViewport.height) * 100}%`;
+  root.style.left = `${
+    ((posX + parentVisualViewport.offsetLeft) / window.visualViewport.width) *
+    100
+  }%`;
+  root.style.top = `${
+    ((posY + parentVisualViewport.offsetTop) / window.visualViewport.height) *
+    100
+  }%`;
 
-  const { matches: prefersReducedMotion } = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const { matches: prefersReducedMotion } = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
   if (!prefersReducedMotion) {
-    root.animate(
+    let animation = root.animate(
       [
-        { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
-        { opacity: "1", transform: "none" },
+        {
+          transform: "skew(2deg, 1deg) scale(0.95)",
+          opacity: "0",
+        },
+        {
+          opacity: "1",
+          transform: "none",
+        },
       ],
       {
-        duration: ANIMATION_DURATION,
+        duration: ANIMATION_DURATION_MS,
         easing: "cubic-bezier(.07, .95, 0, 1)",
         fill: "forwards",
       }
     );
+    await animation.finished;
+    animation.commitStyles();
+    animation.cancel();
   } else {
     root.style.opacity = "1";
   }
+}
+
+async function convertToJpeg(blob, quality) {
+  const bitmap = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext("bitmaprenderer", { alpha: false });
+  ctx.transferFromImageBitmap(bitmap);
+  return await canvas.convertToBlob({
+    type: "image/jpeg",
+    quality: quality,
+  });
+}
+
+function showPicker(inputAttributes) {
+  const decoyInput = document.createElement("input");
+  for (const attrName of [
+    "accept",
+    "capture",
+    "multiple",
+    "type",
+    "webkitdirectory",
+  ]) {
+    if (inputAttributes[attrName])
+      decoyInput.setAttribute(attrName, inputAttributes[attrName]);
+  }
+
+  decoyInput.addEventListener(
+    "change",
+    (e) => {
+      browser.runtime.sendMessage({ type: "files", files: e.target.files });
+    },
+    { once: true }
+  );
+
+  decoyInput.addEventListener(
+    "cancel",
+    (e) => {
+      browser.runtime.sendMessage({ type: "cancel" });
+    },
+    { once: true }
+  );
+
+  decoyInput.showPicker();
+}
+
+function selectBaseName(element) {
+  if (!element.firstChild) return;
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function clamp(val, min, max) {
+  return Math.min(Math.max(val, min), max);
+}
+
+function resolveAnchor(data) {
+  const { inputRect, win, event, isTopFrame } = data;
+
+  const isVisible = (r) => {
+    return (
+      r.top < parentVisualViewport.height &&
+      r.top + r.height > 0 &&
+      r.left < parentVisualViewport.width &&
+      r.left + r.width > 0
+    );
+  };
+
+  const toVisualRect = (rect) => {
+    let visualX, visualY;
+
+    if (isTopFrame) {
+      visualX = rect.left - parentVisualViewport.offsetLeft;
+      visualY = rect.top - parentVisualViewport.offsetTop;
+    } else {
+      let frameScreenX, frameScreenY;
+
+      if (event && (event.screenX !== 0 || event.clientX !== 0)) {
+        frameScreenX =
+          event.screenX - event.clientX * parentVisualViewport.scale;
+        frameScreenY =
+          event.screenY - event.clientY * parentVisualViewport.scale;
+      } else {
+        frameScreenX = win.mozInnerScreenX;
+        frameScreenY = win.mozInnerScreenY;
+      }
+
+      const rectScreenX = rect.left * parentVisualViewport.scale + frameScreenX;
+      const rectScreenY = rect.top * parentVisualViewport.scale + frameScreenY;
+
+      visualX =
+        (rectScreenX - window.mozInnerScreenX) / parentVisualViewport.scale;
+      visualY =
+        (rectScreenY - window.mozInnerScreenY) / parentVisualViewport.scale;
+    }
+
+    const result = {
+      x: visualX,
+      y: visualY,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    return result;
+  };
+
+  const isHuge = (w, h) =>
+    w > parentVisualViewport.width * 0.8 &&
+    h > parentVisualViewport.height * 0.8;
+
+  if (
+    event?.targetRect?.width > 0 &&
+    isVisible(event.targetRect) &&
+    !isHuge(event.targetRect.width, event.targetRect.height)
+  ) {
+    return toVisualRect(event.targetRect);
+  }
+
+  if (
+    (inputRect.width > 0 || inputRect.height > 0) &&
+    isVisible(inputRect) &&
+    !isHuge(inputRect.width, inputRect.height)
+  ) {
+    return toVisualRect(inputRect);
+  }
+
+  if (event && event.screenX !== 0 && event.screenY !== 0) {
+    const visualX =
+      (event.screenX - window.mozInnerScreenX) / parentVisualViewport.scale;
+    const visualY =
+      (event.screenY - window.mozInnerScreenY) / parentVisualViewport.scale;
+
+    const result = {
+      x: visualX,
+      y: visualY,
+      width: 0,
+      height: 0,
+    };
+    return result;
+  }
+
+  return null;
+}
+
+async function calculatePopupPosition(
+  anchor,
+  mousePromise,
+  popupWidth,
+  popupHeight,
+  screenMargin
+) {
+  let targetRect = null;
+
+  if (anchor) {
+    targetRect = {
+      left: anchor.x,
+      top: anchor.y,
+      width: anchor.width,
+      height: anchor.height,
+    };
+  } else {
+    const mouse = await Promise.race([
+      mousePromise,
+      new Promise((resolve) => setTimeout(resolve, 150)),
+    ]);
+
+    if (mouse) {
+      const visualX =
+        (mouse.screenX - window.mozInnerScreenX) / parentVisualViewport.scale;
+      const visualY =
+        (mouse.screenY - window.mozInnerScreenY) / parentVisualViewport.scale;
+
+      targetRect = {
+        left: visualX,
+        top: visualY,
+        width: 0,
+        height: 0,
+      };
+    }
+  }
+
+  if (!targetRect) {
+    return {
+      posX: (parentVisualViewport.width - popupWidth) / 2,
+      posY: (parentVisualViewport.height - popupHeight) / 2,
+    };
+  }
+
+  let posX = targetRect.left;
+
+  if (targetRect.width > 0) {
+    const shouldCenter =
+      targetRect.width > popupWidth || targetRect.width < popupWidth / 2;
+    if (shouldCenter) {
+      posX = targetRect.left + (targetRect.width - popupWidth) / 2;
+    }
+  }
+
+  let posY;
+
+  const isSubstantiallyLarger =
+    targetRect.width > popupWidth * 2 && targetRect.height > popupHeight * 2;
+
+  if (isSubstantiallyLarger) {
+    posY = targetRect.top + screenMargin;
+  } else {
+    const spaceAbove = targetRect.top;
+    const spaceBelow =
+      parentVisualViewport.height - (targetRect.top + targetRect.height);
+
+    const placeBelow = spaceBelow >= popupHeight || spaceBelow > spaceAbove;
+
+    posY = placeBelow
+      ? targetRect.top + targetRect.height
+      : targetRect.top - popupHeight;
+  }
+
+  const result = {
+    posX: clamp(
+      posX,
+      screenMargin,
+      parentVisualViewport.width - popupWidth - screenMargin
+    ),
+    posY: clamp(
+      posY,
+      screenMargin,
+      parentVisualViewport.height - popupHeight - screenMargin
+    ),
+  };
+
+  return result;
+}
+
+function generateDefaultFilename() {
+  const now = Temporal.Now.plainDateTimeISO();
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    `img-` +
+    `${now.year}-${pad(now.month)}-${pad(now.day)}-` +
+    `${pad(now.hour)}-${pad(now.minute)}-${pad(now.second)}`
+  );
+}
+
+function waitforStableLayout() {
+  if (window.visualViewport.width >= POPUP_WIDTH_PX) {
+    return;
+  }
+
+  return new Promise((resolve) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    const onResize = () => {
+      if (window.visualViewport.width >= POPUP_WIDTH_PX) {
+        controller.abort();
+        resolve();
+      }
+    };
+    window.visualViewport.addEventListener("resize", onResize, {
+      signal,
+    });
+  });
 }
