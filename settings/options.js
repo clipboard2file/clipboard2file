@@ -99,7 +99,7 @@ function createCheckbox(container, item) {
   const input = document.createElement("input");
   input.type = "checkbox";
   input.id = item.key;
-  input.addEventListener("change", async (e) => {
+  input.addEventListener("change", async e => {
     await browser.storage.local.set({ [item.key]: e.target.checked });
   });
 
@@ -121,7 +121,7 @@ function createSelect(container, item) {
   const select = document.createElement("select");
   select.id = item.key;
 
-  item.options.forEach((opt) => {
+  item.options.forEach(opt => {
     const option = document.createElement("option");
     option.value = opt.value;
     option.textContent = opt.l10nId
@@ -130,13 +130,11 @@ function createSelect(container, item) {
     select.appendChild(option);
   });
 
-  select.addEventListener("change", async (e) => {
+  select.addEventListener("change", async e => {
     const newValue = e.target.value;
 
     if (item.key === "defaultFilename" && newValue === "custom") {
-      const inputOption = options.find(
-        (o) => o.type === "customInputWithButton"
-      );
+      const inputOption = options.find(o => o.type === "customInputWithButton");
       const savedText = inputOption ? await getSetting(inputOption.key) : "";
 
       if (savedText && savedText.trim().length > 0) {
@@ -208,11 +206,11 @@ function createCustomInput(container, item) {
     }
   };
 
-  input.addEventListener("input", (e) => {
+  input.addEventListener("input", e => {
     button.disabled = !e.target.value.trim();
   });
 
-  input.addEventListener("keydown", (e) => {
+  input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
       e.preventDefault();
       saveInput();
@@ -266,7 +264,7 @@ function createRange(container, item) {
   }
   input.setAttribute("list", datalistId);
 
-  input.addEventListener("input", async (e) => {
+  input.addEventListener("input", async e => {
     const val = parseInt(e.target.value, 10);
     valueDisplay.textContent = val + (item.unit || "");
     await browser.storage.local.set({ [item.key]: val });

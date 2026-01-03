@@ -17,7 +17,7 @@ const parentVisualViewport = {
   height: parseFloat(params.get("height")),
 };
 
-const mouseoverPromise = new Promise((resolve) =>
+const mouseoverPromise = new Promise(resolve =>
   document.addEventListener("mouseover", resolve, { once: true })
 );
 
@@ -165,7 +165,7 @@ if (!initData) {
 
   window.addEventListener("resize", updateDPR);
 
-  formatToggle.addEventListener("pointerdown", async (e) => {
+  formatToggle.addEventListener("pointerdown", async e => {
     if (e.button === 2) return;
     e.preventDefault();
 
@@ -214,20 +214,20 @@ if (!initData) {
     filenameDiv.focus();
   });
 
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       e.preventDefault();
       browser.runtime.sendMessage({ type: "cancel" });
     }
   });
 
-  document.addEventListener("pointerdown", (e) => {
+  document.addEventListener("pointerdown", e => {
     if (e.target === document.body) {
       browser.runtime.sendMessage({ type: "cancel" });
     }
   });
 
-  filenameDiv.addEventListener("keydown", (e) => {
+  filenameDiv.addEventListener("keydown", e => {
     if (e.key === "Enter") {
       e.preventDefault();
       preview.click();
@@ -317,7 +317,7 @@ function showPicker(inputAttributes) {
 
   decoyInput.addEventListener(
     "change",
-    (e) => {
+    e => {
       browser.runtime.sendMessage({ type: "files", files: e.target.files });
     },
     { once: true }
@@ -325,7 +325,7 @@ function showPicker(inputAttributes) {
 
   decoyInput.addEventListener(
     "cancel",
-    (e) => {
+    e => {
       browser.runtime.sendMessage({ type: "cancel" });
     },
     { once: true }
@@ -350,7 +350,7 @@ function clamp(val, min, max) {
 function resolveAnchor(data) {
   const { inputRect, win, event, isTopFrame } = data;
 
-  const isVisible = (r) => {
+  const isVisible = r => {
     return (
       r.top < parentVisualViewport.height &&
       r.top + r.height > 0 &&
@@ -359,7 +359,7 @@ function resolveAnchor(data) {
     );
   };
 
-  const toVisualRect = (rect) => {
+  const toVisualRect = rect => {
     let visualX, visualY;
 
     if (isTopFrame) {
@@ -454,7 +454,7 @@ async function calculatePopupPosition(
   } else {
     const mouse = await Promise.race([
       mousePromise,
-      new Promise((resolve) => setTimeout(resolve, 150)),
+      new Promise(resolve => setTimeout(resolve, 150)),
     ]);
 
     if (mouse) {
@@ -526,7 +526,7 @@ async function calculatePopupPosition(
 
 function generateDefaultFilename() {
   const now = Temporal.Now.plainDateTimeISO();
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad = n => String(n).padStart(2, "0");
   return (
     `img-` +
     `${now.year}-${pad(now.month)}-${pad(now.day)}-` +
@@ -539,7 +539,7 @@ function waitforStableLayout() {
     return;
   }
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const controller = new AbortController();
     const { signal } = controller;
     const onResize = () => {

@@ -59,8 +59,9 @@ browser.runtime.onMessage.addListener((data, sender) => {
   return false;
 });
 
-browser.runtime.onConnect.addListener((port) => {
+browser.runtime.onConnect.addListener(port => {
   const tabId = port.sender?.tab?.id;
+
   if (!tabId) return;
 
   if (port.name === "input") {
@@ -69,10 +70,10 @@ browser.runtime.onConnect.addListener((port) => {
       return;
     }
 
-    port.onMessage.addListener(async (msg) => {
+    port.onMessage.addListener(async msg => {
       if (msg.type === "openPopup") {
         const items = await navigator.clipboard.read();
-        const img = items.find((i) => i.types.includes("image/png"));
+        const img = items.find(i => i.types.includes("image/png"));
         let blob = img ? await img.getType("image/png") : null;
 
         if (!blob) {
@@ -117,7 +118,7 @@ browser.runtime.onConnect.addListener((port) => {
 
         browser.tabs.sendMessage(
           tabId,
-          { type: "spawn_popup", tabId, tagName },
+          { type: "spawn_popup", tagName },
           { frameId: 0 }
         );
       }

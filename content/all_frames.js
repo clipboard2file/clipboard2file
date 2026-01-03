@@ -1,4 +1,4 @@
-window.addEventListener("click", (event) => {
+window.addEventListener("click", event => {
   let target;
   if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
     target = event.target;
@@ -89,7 +89,7 @@ exportFunction(
 function handleInputElement(input, event) {
   const port = browser.runtime.connect({ name: "input" });
 
-  port.onMessage.addListener((data) => {
+  port.onMessage.addListener(data => {
     if (data.type === "showPicker") {
       input.showPicker();
       port.disconnect();
