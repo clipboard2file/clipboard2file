@@ -48,7 +48,8 @@ button {
   background-color: rgb(66, 65, 77);
   border: calc(1px / var(--devicePixelRatio)) rgb(82, 82, 94) solid;
   border-radius: calc(8px / var(--devicePixelRatio));
-  box-shadow: 0 calc(2px / var(--devicePixelRatio)) calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 calc(2px / var(--devicePixelRatio))
+    calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
 }
 
 #filenameContainer {

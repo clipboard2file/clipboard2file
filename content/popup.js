@@ -52,8 +52,65 @@ if (!initData) {
   const preview = document.getElementById("preview");
   const selectAll = document.getElementById("selectAll");
 
+  let lastSelection = null;
   let currentBlob = clipboardImage;
   let previewUrl = null;
+
+  const jpegQuality = settings.jpegQuality / 100;
+
+  const updateDPR = () => {
+    const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
+    document.body.style.setProperty("--devicePixelRatio", dpr);
+  };
+
+  const updateEmptyState = () => {
+    filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
+  };
+
+  const restoreSelection = () => {
+    if (!lastSelection) return;
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.setBaseAndExtent(
+      lastSelection.anchorNode,
+      lastSelection.anchorOffset,
+      lastSelection.focusNode,
+      lastSelection.focusOffset
+    );
+  };
+
+  const setFileType = async (type, saveToStorage = false) => {
+    let newBlob;
+
+    if (type === "jpeg") {
+      try {
+        newBlob = await convertToJpeg(clipboardImage, jpegQuality);
+        filenameExt.textContent = ".jpg";
+        formatToggle.textContent = "JPG";
+      } catch (e) {
+        console.error("JPG conversion failed", e);
+        return setFileType("png", false);
+      }
+    } else {
+      newBlob = clipboardImage;
+      filenameExt.textContent = ".png";
+      formatToggle.textContent = "PNG";
+    }
+
+    currentBlob = newBlob;
+    settings.defaultFileType = type;
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    previewUrl = URL.createObjectURL(currentBlob);
+    preview.style.backgroundImage = `url(${previewUrl})`;
+
+    if (saveToStorage) {
+      browser.storage.local.set({ defaultFileType: type });
+    }
+  };
 
   let defaultFilename;
   if (settings.defaultFilename === "unix") {
@@ -66,115 +123,78 @@ if (!initData) {
     defaultFilename = generateDefaultFilename();
   }
 
-  const jpegQuality = settings.jpegQuality / 100;
-
   filenameDiv.textContent = defaultFilename;
   filenameDiv.dataset.placeholder = defaultFilename;
-
-  const updateEmptyState = () => {
-    filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
-  };
-  filenameDiv.addEventListener("input", updateEmptyState);
   updateEmptyState();
 
   if (!settings.showFilenameBox) {
     filenameContainer.style.display = "none";
   }
 
-  const setFileType = async (type, saveToStorage = false) => {
-    let newBlob;
-
-    if (type === "jpeg") {
-      try {
-        newBlob = await convertToJpeg(clipboardImage, jpegQuality);
-        filenameExt.textContent = ".jpg";
-        formatToggle.textContent = "JPG";
-      } catch (e) {
-        console.error("JPG conversion failed", e);
-        return setFileType("png", saveToStorage);
-      }
-    } else {
-      newBlob = clipboardImage;
-      filenameExt.textContent = ".png";
-      formatToggle.textContent = "PNG";
-    }
-
-    currentBlob = newBlob;
-    settings.defaultFileType = type;
-
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    previewUrl = URL.createObjectURL(currentBlob);
-    preview.style.backgroundImage = `url(${previewUrl})`;
-
-    const currentText = filenameDiv.textContent;
-    let newText = currentText;
-
-    newText = currentText.replace(/\.(png|jpg)$/i, "");
-
-    if (newText !== currentText) {
-      const isFocused = document.activeElement === filenameDiv;
-      let caretPos = 0;
-
-      if (isFocused) {
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          if (range.startContainer.nodeType === Node.TEXT_NODE) {
-            caretPos = range.startOffset;
-          } else {
-            caretPos = 0;
-          }
-        }
-      }
-
-      filenameDiv.textContent = newText;
-
-      if (isFocused) {
-        const textNode = filenameDiv.firstChild;
-        if (textNode) {
-          const range = document.createRange();
-          const safePos = Math.min(caretPos, textNode.length);
-          range.setStart(textNode, safePos);
-          range.setEnd(textNode, safePos);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        } else {
-          filenameDiv.focus();
-        }
-      }
-    }
-
-    updateEmptyState();
-
-    if (saveToStorage) {
-      browser.storage.local.set({ defaultFileType: type });
-    }
-  };
+  selectAll.textContent = browser.i18n.getMessage("showAllFiles");
 
   await setFileType(settings.defaultFileType, false);
 
-  selectAll.textContent = browser.i18n.getMessage("showAllFiles");
-
-  const updateDPR = () => {
-    const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
-    document.body.style.setProperty("--devicePixelRatio", dpr);
-  };
-
   updateDPR();
-
   window.addEventListener("resize", updateDPR);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      browser.runtime.sendMessage({ type: "cancel" });
+    }
+  });
+
+  document.addEventListener("pointerdown", e => {
+    if (e.target === document.body) {
+      browser.runtime.sendMessage({ type: "cancel" });
+    }
+  });
+
+  document.addEventListener("selectionchange", () => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (filenameDiv.contains(range.commonAncestorContainer)) {
+        lastSelection = {
+          anchorNode: selection.anchorNode,
+          anchorOffset: selection.anchorOffset,
+          focusNode: selection.focusNode,
+          focusOffset: selection.focusOffset,
+        };
+      }
+    }
+  });
+
+  window.addEventListener("blur", e => {
+    if (e.target === window && document.activeElement === filenameDiv) {
+      restoreSelection();
+    }
+  });
+
+  filenameDiv.addEventListener("focus", restoreSelection);
+
+  filenameContainer.addEventListener("click", () => {
+    filenameDiv.focus();
+  });
+
+  filenameDiv.addEventListener("input", updateEmptyState);
+
+  filenameDiv.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      preview.click();
+    }
+  });
 
   formatToggle.addEventListener("pointerdown", async e => {
     if (e.button === 2) return;
     e.preventDefault();
-
     if (formatToggle.disabled) return;
-    formatToggle.disabled = true;
 
+    formatToggle.disabled = true;
     const newType = settings.defaultFileType === "jpeg" ? "png" : "jpeg";
     await setFileType(newType, true);
-
     formatToggle.disabled = false;
   });
 
@@ -182,15 +202,14 @@ if (!initData) {
     const dataTransfer = new DataTransfer();
 
     let base = filenameDiv.textContent.trim();
-    if (base.length === 0) base = defaultFilename;
+    if (base.length === 0) {
+      base = defaultFilename;
+    }
+
+    base = base.replace(/\.(png|jpg|jpeg)$/i, "");
 
     const isPng = currentBlob.type === "image/png";
     const ext = isPng ? ".png" : ".jpg";
-
-    if (base.toLowerCase().endsWith(ext)) {
-      base = base.substring(0, base.length - 4);
-    }
-
     const filename = base + ext;
 
     dataTransfer.items.add(
@@ -210,30 +229,6 @@ if (!initData) {
     }
   });
 
-  filenameContainer.addEventListener("click", () => {
-    filenameDiv.focus();
-  });
-
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      browser.runtime.sendMessage({ type: "cancel" });
-    }
-  });
-
-  document.addEventListener("pointerdown", e => {
-    if (e.target === document.body) {
-      browser.runtime.sendMessage({ type: "cancel" });
-    }
-  });
-
-  filenameDiv.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      preview.click();
-    }
-  });
-
   if (settings.showFilenameBox) {
     filenameDiv.focus();
     selectBaseName(filenameDiv);
@@ -243,24 +238,24 @@ if (!initData) {
     (POPUP_WIDTH_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
   const popupHeight =
     (POPUP_HEIGHT_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
+  const screenMargin =
+    (SCREEN_MARGIN_PX * backgroundDevicePixelRatio) /
+    window.devicePixelRatio /
+    parentVisualViewport.scale;
 
   const anchor = resolveAnchor({ ...positionData, isTopFrame });
-  const { posX, posY } = await calculatePopupPosition(
+
+  const { popupX, popupY, scale } = await calculatePopupPosition(
     anchor,
     mouseoverPromise,
     popupWidth,
     popupHeight,
-    SCREEN_MARGIN_PX
+    screenMargin
   );
 
-  root.style.left = `${
-    ((posX + parentVisualViewport.offsetLeft) / window.visualViewport.width) *
-    100
-  }%`;
-  root.style.top = `${
-    ((posY + parentVisualViewport.offsetTop) / window.visualViewport.height) *
-    100
-  }%`;
+  root.style.left = `${(popupX / window.visualViewport.width) * 100}%`;
+  root.style.top = `${(popupY / window.visualViewport.height) * 100}%`;
+  root.style.zoom = scale;
 
   const { matches: prefersReducedMotion } = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
@@ -304,15 +299,9 @@ async function convertToJpeg(blob, quality) {
 
 function showPicker(inputAttributes) {
   const decoyInput = document.createElement("input");
-  for (const attrName of [
-    "accept",
-    "capture",
-    "multiple",
-    "type",
-    "webkitdirectory",
-  ]) {
-    if (inputAttributes[attrName])
-      decoyInput.setAttribute(attrName, inputAttributes[attrName]);
+  decoyInput.type = "file";
+  for (const attrName of ["accept", "capture", "multiple"]) {
+    decoyInput.setAttribute(attrName, inputAttributes[attrName]);
   }
 
   decoyInput.addEventListener(
@@ -347,89 +336,107 @@ function clamp(val, min, max) {
   return Math.min(Math.max(val, min), max);
 }
 
-function resolveAnchor(data) {
-  const { inputRect, win, event, isTopFrame } = data;
-
-  const isVisible = r => {
-    return (
-      r.top < parentVisualViewport.height &&
-      r.top + r.height > 0 &&
-      r.left < parentVisualViewport.width &&
-      r.left + r.width > 0
-    );
-  };
-
-  const toVisualRect = rect => {
-    let visualX, visualY;
+function resolveAnchor({ inputRect, win, event, isTopFrame }) {
+  const toParentVisualRect = rect => {
+    let parentVisualViewportRelativeX, parentVisualViewportRelativeY;
 
     if (isTopFrame) {
-      visualX = rect.left - parentVisualViewport.offsetLeft;
-      visualY = rect.top - parentVisualViewport.offsetTop;
+      parentVisualViewportRelativeX =
+        rect.left - parentVisualViewport.offsetLeft;
+      parentVisualViewportRelativeY = rect.top - parentVisualViewport.offsetTop;
     } else {
-      let frameScreenX, frameScreenY;
+      let screenRelativeFrameX, screenRelativeFrameY;
 
       if (event && (event.screenX !== 0 || event.clientX !== 0)) {
-        frameScreenX =
+        screenRelativeFrameX =
           event.screenX - event.clientX * parentVisualViewport.scale;
-        frameScreenY =
+        screenRelativeFrameY =
           event.screenY - event.clientY * parentVisualViewport.scale;
       } else {
-        frameScreenX = win.mozInnerScreenX;
-        frameScreenY = win.mozInnerScreenY;
+        screenRelativeFrameX = win.mozInnerScreenX;
+        screenRelativeFrameY = win.mozInnerScreenY;
       }
 
-      const rectScreenX = rect.left * parentVisualViewport.scale + frameScreenX;
-      const rectScreenY = rect.top * parentVisualViewport.scale + frameScreenY;
+      const screenRelativeRectX =
+        rect.left * parentVisualViewport.scale + screenRelativeFrameX;
+      const screenRelativeRectY =
+        rect.top * parentVisualViewport.scale + screenRelativeFrameY;
 
-      visualX =
-        (rectScreenX - window.mozInnerScreenX) / parentVisualViewport.scale;
-      visualY =
-        (rectScreenY - window.mozInnerScreenY) / parentVisualViewport.scale;
+      parentVisualViewportRelativeX =
+        (screenRelativeRectX - window.mozInnerScreenX) /
+        parentVisualViewport.scale;
+      parentVisualViewportRelativeY =
+        (screenRelativeRectY - window.mozInnerScreenY) /
+        parentVisualViewport.scale;
     }
 
-    const result = {
-      x: visualX,
-      y: visualY,
-      width: rect.width,
-      height: rect.height,
-    };
+    const clampedParentVisualViewportRelativeLeft = Math.max(
+      parentVisualViewportRelativeX,
+      0
+    );
+    const clampedParentVisualViewportRelativeTop = Math.max(
+      parentVisualViewportRelativeY,
+      0
+    );
+    const clampedParentVisualViewportRelativeRight = Math.min(
+      parentVisualViewportRelativeX + rect.width,
+      parentVisualViewport.width
+    );
+    const clampedParentVisualViewportRelativeBottom = Math.min(
+      parentVisualViewportRelativeY + rect.height,
+      parentVisualViewport.height
+    );
 
-    return result;
+    const clampedParentVisualViewportRelativeWidth = Math.max(
+      0,
+      clampedParentVisualViewportRelativeRight -
+        clampedParentVisualViewportRelativeLeft
+    );
+    const clampedParentVisualViewportRelativeHeight = Math.max(
+      0,
+      clampedParentVisualViewportRelativeBottom -
+        clampedParentVisualViewportRelativeTop
+    );
+
+    return {
+      x: clampedParentVisualViewportRelativeLeft,
+      y: clampedParentVisualViewportRelativeTop,
+      width: clampedParentVisualViewportRelativeWidth,
+      height: clampedParentVisualViewportRelativeHeight,
+    };
   };
 
-  const isHuge = (w, h) =>
-    w > parentVisualViewport.width * 0.8 &&
-    h > parentVisualViewport.height * 0.8;
+  const isValidAnchor = rect => {
+    const isVisible = rect.width > 0 && rect.height > 0;
 
-  if (
-    event?.targetRect?.width > 0 &&
-    isVisible(event.targetRect) &&
-    !isHuge(event.targetRect.width, event.targetRect.height)
-  ) {
-    return toVisualRect(event.targetRect);
+    const isHuge =
+      rect.width > parentVisualViewport.width * 0.6 &&
+      rect.height > parentVisualViewport.height * 0.6;
+
+    return isVisible && !isHuge;
+  };
+
+  if (event?.targetRect?.width >= 0) {
+    const parentVisualRect = toParentVisualRect(event.targetRect);
+    if (isValidAnchor(parentVisualRect)) {
+      return parentVisualRect;
+    }
   }
 
-  if (
-    (inputRect.width > 0 || inputRect.height > 0) &&
-    isVisible(inputRect) &&
-    !isHuge(inputRect.width, inputRect.height)
-  ) {
-    return toVisualRect(inputRect);
+  if (inputRect.width > 0 || inputRect.height > 0) {
+    const parentVisualRect = toParentVisualRect(inputRect);
+    if (isValidAnchor(parentVisualRect)) {
+      return parentVisualRect;
+    }
   }
 
   if (event && event.screenX !== 0 && event.screenY !== 0) {
-    const visualX =
-      (event.screenX - window.mozInnerScreenX) / parentVisualViewport.scale;
-    const visualY =
-      (event.screenY - window.mozInnerScreenY) / parentVisualViewport.scale;
-
-    const result = {
-      x: visualX,
-      y: visualY,
+    return {
+      x: (event.screenX - window.mozInnerScreenX) / parentVisualViewport.scale,
+      y: (event.screenY - window.mozInnerScreenY) / parentVisualViewport.scale,
       width: 0,
       height: 0,
     };
-    return result;
   }
 
   return null;
@@ -446,82 +453,161 @@ async function calculatePopupPosition(
 
   if (anchor) {
     targetRect = {
-      left: anchor.x,
       top: anchor.y,
+      left: anchor.x,
+      bottom: anchor.y + anchor.height,
+      right: anchor.x + anchor.width,
       width: anchor.width,
       height: anchor.height,
     };
   } else {
     const mouse = await Promise.race([
       mousePromise,
-      new Promise(resolve => setTimeout(resolve, 150)),
+      new Promise(resolve => setTimeout(resolve, 100)),
     ]);
 
     if (mouse) {
-      const visualX =
+      const parentVisualViewportRelativeMouseX =
         (mouse.screenX - window.mozInnerScreenX) / parentVisualViewport.scale;
-      const visualY =
+      const parentVisualViewportRelativeMouseY =
         (mouse.screenY - window.mozInnerScreenY) / parentVisualViewport.scale;
 
       targetRect = {
-        left: visualX,
-        top: visualY,
+        top: parentVisualViewportRelativeMouseY,
+        left: parentVisualViewportRelativeMouseX,
+        bottom: parentVisualViewportRelativeMouseY,
+        right: parentVisualViewportRelativeMouseX,
         width: 0,
         height: 0,
       };
     }
   }
 
+  const parentVisualViewportAvailableWidth =
+    parentVisualViewport.width - 2 * screenMargin;
+  const parentVisualViewportAvailableHeight =
+    parentVisualViewport.height - 2 * screenMargin;
+
   if (!targetRect) {
+    const scale = Math.min(
+      1,
+      parentVisualViewportAvailableWidth / popupWidth,
+      parentVisualViewportAvailableHeight / popupHeight
+    );
+    const parentVisualViewportRelativePopupX =
+      screenMargin +
+      (parentVisualViewportAvailableWidth - popupWidth * scale) / 2;
+    const parentVisualViewportRelativePopupY =
+      screenMargin +
+      (parentVisualViewportAvailableHeight - popupHeight * scale) / 2;
     return {
-      posX: (parentVisualViewport.width - popupWidth) / 2,
-      posY: (parentVisualViewport.height - popupHeight) / 2,
+      scale,
+      popupX:
+        parentVisualViewportRelativePopupX + parentVisualViewport.offsetLeft,
+      popupY:
+        parentVisualViewportRelativePopupY + parentVisualViewport.offsetTop,
     };
   }
 
-  let posX = targetRect.left;
+  let bestSide = null;
 
-  if (targetRect.width > 0) {
-    const shouldCenter =
-      targetRect.width > popupWidth || targetRect.width < popupWidth / 2;
-    if (shouldCenter) {
-      posX = targetRect.left + (targetRect.width - popupWidth) / 2;
+  const updateBest = side => {
+    if (!bestSide || side.scale > bestSide.scale) {
+      bestSide = side;
     }
-  }
-
-  let posY;
-
-  const isSubstantiallyLarger =
-    targetRect.width > popupWidth * 2 && targetRect.height > popupHeight * 2;
-
-  if (isSubstantiallyLarger) {
-    posY = targetRect.top + screenMargin;
-  } else {
-    const spaceAbove = targetRect.top;
-    const spaceBelow =
-      parentVisualViewport.height - (targetRect.top + targetRect.height);
-
-    const placeBelow = spaceBelow >= popupHeight || spaceBelow > spaceAbove;
-
-    posY = placeBelow
-      ? targetRect.top + targetRect.height
-      : targetRect.top - popupHeight;
-  }
-
-  const result = {
-    posX: clamp(
-      posX,
-      screenMargin,
-      parentVisualViewport.width - popupWidth - screenMargin
-    ),
-    posY: clamp(
-      posY,
-      screenMargin,
-      parentVisualViewport.height - popupHeight - screenMargin
-    ),
   };
 
-  return result;
+  const shouldCenter =
+    targetRect.width > 0 &&
+    (targetRect.width > popupWidth * parentVisualViewport.scale ||
+      targetRect.width < (popupWidth * parentVisualViewport.scale) / 2);
+
+  const parentVisualViewportSpaceBelow =
+    parentVisualViewport.height - targetRect.bottom - screenMargin;
+  if (parentVisualViewportSpaceBelow > 0) {
+    const scale = Math.min(
+      1,
+      parentVisualViewportAvailableWidth / popupWidth,
+      parentVisualViewportSpaceBelow / popupHeight
+    );
+    const unclampedPopupX = shouldCenter
+      ? targetRect.left + (targetRect.width - popupWidth * scale) / 2
+      : targetRect.left;
+    updateBest({
+      scale,
+      parentVisualViewportRelativePopupX: unclampedPopupX,
+      parentVisualViewportRelativePopupY: targetRect.bottom,
+    });
+  }
+
+  const parentVisualViewportSpaceAbove = targetRect.top - screenMargin;
+  if (parentVisualViewportSpaceAbove > 0) {
+    const scale = Math.min(
+      1,
+      parentVisualViewportAvailableWidth / popupWidth,
+      parentVisualViewportSpaceAbove / popupHeight
+    );
+    const unclampedPopupX = shouldCenter
+      ? targetRect.left + (targetRect.width - popupWidth * scale) / 2
+      : targetRect.left;
+    updateBest({
+      scale,
+      parentVisualViewportRelativePopupX: unclampedPopupX,
+      parentVisualViewportRelativePopupY: targetRect.top - popupHeight * scale,
+    });
+  }
+
+  const parentVisualViewportSpaceRight =
+    parentVisualViewport.width - targetRect.right - screenMargin;
+  if (parentVisualViewportSpaceRight > 0) {
+    const scale = Math.min(
+      1,
+      parentVisualViewportSpaceRight / popupWidth,
+      parentVisualViewportAvailableHeight / popupHeight
+    );
+    updateBest({
+      scale,
+      parentVisualViewportRelativePopupX: targetRect.right,
+      parentVisualViewportRelativePopupY: targetRect.top,
+    });
+  }
+
+  const parentVisualViewportSpaceLeft = targetRect.left - screenMargin;
+  if (parentVisualViewportSpaceLeft > 0) {
+    const scale = Math.min(
+      1,
+      parentVisualViewportSpaceLeft / popupWidth,
+      parentVisualViewportAvailableHeight / popupHeight
+    );
+    updateBest({
+      scale,
+      parentVisualViewportRelativePopupX: targetRect.left - popupWidth * scale,
+      parentVisualViewportRelativePopupY: targetRect.top,
+    });
+  }
+
+  const {
+    scale,
+    parentVisualViewportRelativePopupX,
+    parentVisualViewportRelativePopupY,
+  } = bestSide;
+
+  const clampedParentVisualX = clamp(
+    parentVisualViewportRelativePopupX,
+    screenMargin,
+    screenMargin + parentVisualViewportAvailableWidth - popupWidth * scale
+  );
+  const clampedParentVisualY = clamp(
+    parentVisualViewportRelativePopupY,
+    screenMargin,
+    screenMargin + parentVisualViewportAvailableHeight - popupHeight * scale
+  );
+
+  return {
+    scale,
+    popupX: clampedParentVisualX + parentVisualViewport.offsetLeft,
+    popupY: clampedParentVisualY + parentVisualViewport.offsetTop,
+  };
 }
 
 function generateDefaultFilename() {
@@ -535,7 +621,7 @@ function generateDefaultFilename() {
 }
 
 function waitforStableLayout() {
-  if (window.visualViewport.width >= POPUP_WIDTH_PX) {
+  if (window.visualViewport.width >= 12) {
     return;
   }
 
@@ -543,7 +629,7 @@ function waitforStableLayout() {
     const controller = new AbortController();
     const { signal } = controller;
     const onResize = () => {
-      if (window.visualViewport.width >= POPUP_WIDTH_PX) {
+      if (window.visualViewport.width >= 12) {
         controller.abort();
         resolve();
       }

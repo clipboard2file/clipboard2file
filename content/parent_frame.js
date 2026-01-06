@@ -20,11 +20,13 @@ browser.runtime.onMessage.addListener(data => {
     fetch(browser.runtime.getURL("content/shadow.css"), { signal })
       .then(r => r.text())
       .then(cssText => {
-        if (signal.aborted) return;
+        if (signal.aborted) {
+          return;
+        }
 
-        const sheet = new CSSStyleSheet();
-        sheet.replaceSync(cssText);
-        shadow.wrappedJSObject.adoptedStyleSheets = new window.Array(sheet);
+        const style = document.createElement("style");
+        style.textContent = cssText;
+        shadow.appendChild(style);
 
         document.documentElement.appendChild(host);
 
@@ -57,8 +59,8 @@ browser.runtime.onMessage.addListener(data => {
   return false;
 });
 
-exportFunction(
-  function () {
+const parentOverrides = {
+  showPopover() {
     const dialog = currentDialog?.deref();
 
     if (dialog) {
@@ -66,21 +68,17 @@ exportFunction(
     }
 
     try {
-      return this.showModal(...arguments);
-    } catch (e) {
-      throw new window.DOMException(e.message, e.name);
+      return HTMLElement.prototype.showPopover.apply(this, arguments);
+    } catch (error) {
+      throw createPageError(error);
     } finally {
       if (dialog?.isConnected) {
         dialog.showModal();
       }
     }
   },
-  HTMLDialogElement.prototype,
-  { defineAs: "showModal" }
-);
 
-exportFunction(
-  function () {
+  togglePopover() {
     const dialog = currentDialog?.deref();
 
     if (dialog) {
@@ -88,21 +86,17 @@ exportFunction(
     }
 
     try {
-      return this.showPopover(...arguments);
-    } catch (e) {
-      throw new window.DOMException(e.message, e.name);
+      return HTMLElement.prototype.togglePopover.apply(this, arguments);
+    } catch (error) {
+      throw createPageError(error);
     } finally {
       if (dialog?.isConnected) {
         dialog.showModal();
       }
     }
   },
-  HTMLElement.prototype,
-  { defineAs: "showPopover" }
-);
 
-exportFunction(
-  function () {
+  showModal() {
     const dialog = currentDialog?.deref();
 
     if (dialog) {
@@ -110,56 +104,67 @@ exportFunction(
     }
 
     try {
-      return this.togglePopover(...arguments);
-    } catch (e) {
-      throw new window.DOMException(e.message, e.name);
+      return HTMLDialogElement.prototype.showModal.apply(this, arguments);
+    } catch (error) {
+      throw createPageError(error);
     } finally {
       if (dialog?.isConnected) {
         dialog.showModal();
       }
     }
   },
-  HTMLElement.prototype,
-  { defineAs: "togglePopover" }
+};
+
+Object.defineProperty(
+  window.wrappedJSObject.HTMLElement.prototype,
+  "showPopover",
+  {
+    value: exportFunction(function showPopover() {
+      if (new.target) {
+        throw new window.TypeError(
+          "HTMLElement.prototype.showPopover is not a constructor"
+        );
+      }
+      return parentOverrides.showPopover.apply(this, arguments);
+    }, window),
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  }
 );
 
-exportFunction(
-  function () {
-    const dialog = currentDialog?.deref();
-
-    if (!dialog) {
-      return this.click();
-    }
-
-    if (this.hasAttribute("command") && dialog.isConnected) {
-      dialog.close();
-      this.click();
-      dialog.showModal();
-    } else {
-      this.click();
-    }
-  },
-  HTMLButtonElement.prototype,
-  { defineAs: "click" }
+Object.defineProperty(
+  window.wrappedJSObject.HTMLElement.prototype,
+  "togglePopover",
+  {
+    value: exportFunction(function togglePopover() {
+      if (new.target) {
+        throw new window.TypeError(
+          "HTMLElement.prototype.togglePopover is not a constructor"
+        );
+      }
+      return parentOverrides.togglePopover.apply(this, arguments);
+    }, window),
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  }
 );
 
-exportFunction(
-  function (event) {
-    const dialog = currentDialog?.deref();
-
-    if (!dialog) {
-      return this.dispatchEvent(event);
-    }
-
-    if (this.hasAttribute("command") && dialog.isConnected) {
-      dialog.close();
-      let dispatched = this.dispatchEvent(event);
-      dialog.showModal();
-      return dispatched;
-    } else {
-      return this.dispatchEvent(event);
-    }
-  },
-  HTMLButtonElement.prototype,
-  { defineAs: "dispatchEvent" }
+Object.defineProperty(
+  window.wrappedJSObject.HTMLDialogElement.prototype,
+  "showModal",
+  {
+    value: exportFunction(function showModal() {
+      if (new.target) {
+        throw new window.TypeError(
+          "HTMLDialogElement.prototype.showModal is not a constructor"
+        );
+      }
+      return parentOverrides.showModal.apply(this, arguments);
+    }, window),
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  }
 );

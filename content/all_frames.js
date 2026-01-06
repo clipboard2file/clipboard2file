@@ -1,91 +1,3 @@
-window.addEventListener("click", event => {
-  let target;
-  if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
-    target = event.target;
-  } else {
-    try {
-      if (
-        event.originalTarget.matches("input[type=file]:not([webkitdirectory])")
-      ) {
-        target = event.originalTarget;
-      }
-    } catch {}
-  }
-
-  if (target && navigator.userActivation.isActive) {
-    event.preventDefault();
-    handleInputElement(target, event);
-  }
-});
-
-exportFunction(
-  function () {
-    this.stopPropagation();
-    if (
-      this.type === "click" &&
-      this.target.matches("input[type=file]:not([webkitdirectory])") &&
-      navigator.userActivation.isActive
-    ) {
-      this.preventDefault();
-      handleInputElement(this.target, this);
-    }
-  },
-  MouseEvent.prototype,
-  { defineAs: "stopPropagation" }
-);
-
-exportFunction(
-  function () {
-    if (
-      !this.isConnected &&
-      this.matches("[type=file]:not([webkitdirectory])") &&
-      navigator.userActivation.isActive
-    ) {
-      return handleInputElement(this);
-    } else {
-      return this.click();
-    }
-  },
-  HTMLInputElement.prototype,
-  { defineAs: "click" }
-);
-
-exportFunction(
-  function () {
-    if (
-      this.matches("[type=file]:not([webkitdirectory])") &&
-      navigator.userActivation.isActive
-    ) {
-      return handleInputElement(this);
-    } else {
-      try {
-        return this.showPicker();
-      } catch (e) {
-        throw new window.DOMException(e.message, e.name);
-      }
-    }
-  },
-  HTMLInputElement.prototype,
-  { defineAs: "showPicker" }
-);
-
-exportFunction(
-  function (event) {
-    if (
-      event.type === "click" &&
-      this.matches("[type=file]:not([webkitdirectory])") &&
-      navigator.userActivation.isActive
-    ) {
-      handleInputElement(this, event);
-      return true;
-    } else {
-      return this.dispatchEvent(event);
-    }
-  },
-  HTMLInputElement.prototype,
-  { defineAs: "dispatchEvent" }
-);
-
 function handleInputElement(input, event) {
   const port = browser.runtime.connect({ name: "input" });
 
@@ -95,20 +7,32 @@ function handleInputElement(input, event) {
       port.disconnect();
       return;
     }
+
     if (data.type === "files") {
       input.files = structuredClone(data.files);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(
+        new Event("input", { bubbles: true, composed: true })
+      );
+      input.dispatchEvent(
+        new Event("change", { bubbles: true, composed: false })
+      );
       port.disconnect();
     }
+
     if (data.type === "cancel") {
-      input.dispatchEvent(new Event("cancel", { bubbles: true }));
+      input.dispatchEvent(
+        new Event("cancel", { bubbles: true, composed: false })
+      );
       port.disconnect();
     }
   });
 
   const inputAttributes = {};
-  for (const attr of input.attributes) inputAttributes[attr.name] = attr.value;
+  for (const attr of ["accept", "capture", "multiple"]) {
+    if (input.hasAttribute(attr)) {
+      inputAttributes[attr] = input.getAttribute(attr);
+    }
+  }
 
   const positionData = collectAnchorData(input, event);
 
@@ -117,6 +41,338 @@ function handleInputElement(input, event) {
     inputAttributes,
     positionData,
   });
+}
+
+window.addEventListener(
+  "click",
+  event => {
+    let target;
+    if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
+      target = event.target;
+    } else {
+      try {
+        if (
+          event.originalTarget.matches(
+            "input[type=file]:not([webkitdirectory])"
+          )
+        ) {
+          target = event.originalTarget;
+        }
+      } catch {}
+    }
+
+    if (
+      target &&
+      event.type === "click" &&
+      navigator.userActivation.isActive &&
+      event instanceof MouseEvent &&
+      !event.defaultPreventedByPage
+    ) {
+      handleInputElement(target, event);
+      event.defaultPreventedByExtension = true;
+      event.preventDefault();
+    }
+  },
+  { capture: true }
+);
+
+const isTopFrame = browser.runtime.getFrameId(window) === 0;
+
+const overrides = {
+  preventDefault() {
+    try {
+      Event.prototype.preventDefault.call(this);
+      this.defaultPreventedByPage = true;
+      return;
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+
+  get defaultPrevented() {
+    try {
+      let defaultPrevented = Reflect.get(
+        Event.prototype,
+        "defaultPrevented",
+        this
+      );
+
+      if (this.cancelable) {
+        if (this.defaultPreventedByPage) {
+          return true;
+        }
+
+        if (this.defaultPreventedByExtension) {
+          return false;
+        }
+      }
+
+      return defaultPrevented;
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+
+  get returnValue() {
+    try {
+      let returnValue = Reflect.get(Event.prototype, "returnValue", this);
+
+      if (this.cancelable) {
+        if (this.defaultPreventedByPage) {
+          return false;
+        }
+
+        if (this.defaultPreventedByExtension) {
+          return true;
+        }
+      }
+
+      return returnValue;
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+
+  set returnValue(value) {
+    try {
+      let returnValue = Reflect.set(
+        Event.prototype,
+        "returnValue",
+        value,
+        this
+      );
+
+      if (!value) {
+        this.defaultPreventedByPage = true;
+      }
+
+      return returnValue;
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+
+  dispatchEvent(event) {
+    if (
+      event?.type === "click" &&
+      event instanceof MouseEvent &&
+      this instanceof HTMLInputElement &&
+      !this.disabled &&
+      navigator.userActivation.isActive &&
+      this.matches("[type=file]:not([webkitdirectory])")
+    ) {
+      if (!event.cancelable) {
+        handleInputElement(this, event);
+        return true;
+      }
+
+      if (
+        (!event.composed && this.getRootNode() instanceof ShadowRoot) ||
+        !this.isConnected
+      ) {
+        handleInputElement(this, event);
+        event.defaultPreventedByExtension = true;
+        event.preventDefault();
+        return;
+      }
+
+      const dispatched = this.dispatchEvent(event);
+
+      if (event.defaultPreventedByExtension && !event.defaultPreventedByPage) {
+        return true;
+      }
+
+      return dispatched;
+    }
+
+    if (isTopFrame) {
+      const dialog = currentDialog?.deref();
+
+      if (
+        dialog?.isConnected &&
+        this instanceof HTMLButtonElement &&
+        event instanceof Event &&
+        this.hasAttribute("command")
+      ) {
+        dialog.close();
+        let dispatched = this.dispatchEvent(event);
+        dialog.showModal();
+        return dispatched;
+      }
+    }
+
+    try {
+      return EventTarget.prototype.dispatchEvent.call(this, event);
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+
+  click() {
+    if (
+      !this?.isConnected &&
+      !this?.disabled &&
+      navigator.userActivation.isActive &&
+      this instanceof HTMLInputElement &&
+      this.matches("[type=file]:not([webkitdirectory])")
+    ) {
+      handleInputElement(this);
+
+      let event = new PointerEvent("click", {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+
+      event.defaultPreventedByExtension = true;
+      event.preventDefault();
+      this.dispatchEvent(event);
+      return;
+    }
+
+    if (isTopFrame) {
+      const dialog = currentDialog?.deref();
+
+      if (
+        dialog?.isConnected &&
+        this instanceof HTMLButtonElement &&
+        this.hasAttribute("command")
+      ) {
+        dialog.close();
+        this.click();
+        dialog.showModal();
+        return;
+      }
+    }
+
+    try {
+      return HTMLElement.prototype.click.call(this);
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+
+  showPicker() {
+    if (
+      this instanceof HTMLInputElement &&
+      !this.disabled &&
+      navigator.userActivation.isActive &&
+      this.matches("[type=file]:not([webkitdirectory])")
+    ) {
+      handleInputElement(this);
+      return;
+    }
+
+    try {
+      return HTMLInputElement.prototype.showPicker.call(this);
+    } catch (error) {
+      throw createPageError(error);
+    }
+  },
+};
+
+Object.defineProperty(
+  window.wrappedJSObject.Event.prototype,
+  "preventDefault",
+  {
+    value: exportFunction(function preventDefault() {
+      if (new.target) {
+        throw new window.TypeError(
+          "Event.prototype.preventDefault is not a constructor"
+        );
+      }
+      return overrides.preventDefault.call(this);
+    }, window),
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  }
+);
+
+Object.defineProperty(
+  window.wrappedJSObject.Event.prototype,
+  "defaultPrevented",
+  {
+    get: exportFunction(
+      Object.getOwnPropertyDescriptor(overrides, "defaultPrevented").get,
+      window
+    ),
+    enumerable: true,
+    configurable: true,
+  }
+);
+
+Object.defineProperty(window.wrappedJSObject.Event.prototype, "returnValue", {
+  get: exportFunction(
+    Object.getOwnPropertyDescriptor(overrides, "returnValue").get,
+    window
+  ),
+  set: exportFunction(
+    Object.getOwnPropertyDescriptor(overrides, "returnValue").set,
+    window
+  ),
+  enumerable: true,
+  configurable: true,
+});
+
+Object.defineProperty(
+  window.wrappedJSObject.EventTarget.prototype,
+  "dispatchEvent",
+  {
+    value: exportFunction(function dispatchEvent(event) {
+      if (new.target) {
+        throw new window.TypeError(
+          "EventTarget.prototype.dispatchEvent is not a constructor"
+        );
+      }
+      return overrides.dispatchEvent.call(this, event);
+    }, window),
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  }
+);
+
+Object.defineProperty(window.wrappedJSObject.HTMLElement.prototype, "click", {
+  value: exportFunction(function click() {
+    if (new.target) {
+      throw new window.TypeError(
+        "HTMLElement.prototype.click is not a constructor"
+      );
+    }
+    return overrides.click.call(this);
+  }, window),
+  writable: true,
+  enumerable: true,
+  configurable: true,
+});
+
+Object.defineProperty(
+  window.wrappedJSObject.HTMLInputElement.prototype,
+  "showPicker",
+  {
+    value: exportFunction(function showPicker() {
+      if (new.target) {
+        throw new window.TypeError(
+          "HTMLInputElement.prototype.showPicker is not a constructor"
+        );
+      }
+      return overrides.showPicker.call(this);
+    }, window),
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  }
+);
+
+function createPageError(error) {
+  if (error instanceof DOMException) {
+    return new window.DOMException(error.message, error.name);
+  }
+
+  const className = error.constructor.name;
+  const ErrorConstructor = window[className] || window.Error;
+  return new ErrorConstructor(error.message);
 }
 
 function collectAnchorData(input, event) {
@@ -141,7 +397,7 @@ function collectAnchorData(input, event) {
         : event.explicitOriginalTarget;
     let targetRect = null;
 
-    if (target?.getBoundingClientRect) {
+    if (target instanceof Element) {
       const tr = target.getBoundingClientRect();
       targetRect = {
         left: tr.left,

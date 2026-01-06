@@ -1,0 +1,15 @@
+{
+  "name": "clipboard2file",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "mocha tests/*.test.js --timeout 30000 --slow 1000",
+    "release": "git archive --format=zip -o \"$(jq -r '.name + \"-\" + .version + \".zip\"' manifest.json)\" HEAD"
+  },
+  "devDependencies": {
+    "chai": "6.2.2",
+    "mocha": "11.7.5",
+    "puppeteer": "24.34.0",
+    "@puppeteer/browsers": "2.11.0"
+  }
+}
