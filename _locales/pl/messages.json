@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Wyczyść schowek po przesłaniu"
+    "message": "Wyczyścić schowek po przesłaniu obrazu"
   },
   "showFilenameBox": {
     "message": "Pokaż pole tekstowe do edycji nazwy pliku"
+  },
+  "showFormatToggleButton": {
+    "message": "Pokaż przycisk zmiany formatu obrazu"
   },
   "defaultFilename": {
     "message": "Domyślna nazwa pliku"

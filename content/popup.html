@@ -2,18 +2,32 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="stylesheet" type="text/css" href="/content/popup.css" />
-    <script src="popup.js" type="module"></script>
   </head>
   <body tabindex="-1">
-    <div id="root">
-      <div id="filenameContainer">
-        <div id="filenameBase" contenteditable="plaintext-only" spellcheck="false"></div>
-        <div id="filenameExt"></div>
-        <button tabindex="-1" id="formatToggle" type="button">PNG</button>
+    <div id="popup">
+      <div id="filenameContainer" hidden>
+        <div id="filename">
+          <div
+            id="basename"
+            contenteditable="plaintext-only"
+            spellcheck="false"
+          ></div>
+          <div id="ext"></div>
+        </div>
+        <button tabindex="-1" id="formatToggle" type="button" hidden>
+          <span></span>
+        </button>
       </div>
-      <button id="preview"></button>
-      <button id="selectAll">Show all files</button>
+      <button tabindex="-1" id="floatingFormatToggle" type="button" hidden>
+        <span></span>
+      </button>
+      <button id="preview">
+        <img id="previewImage" draggable="false" />
+      </button>
+      <button id="showAllFiles">Show all files</button>
     </div>
+    <script src="popup.js" type="module"></script>
   </body>
 </html>

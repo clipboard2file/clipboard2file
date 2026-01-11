@@ -1,15 +1,21 @@
 export const options = [
   {
-    key: "clearOnPaste",
-    type: "checkbox",
-    default: false,
-    l10nLabel: "clearOnPaste",
-  },
-  {
     key: "showFilenameBox",
     type: "checkbox",
     default: false,
     l10nLabel: "showFilenameBox",
+  },
+  {
+    key: "showFormatToggleButton",
+    type: "checkbox",
+    default: false,
+    l10nLabel: "showFormatToggleButton",
+  },
+  {
+    key: "clearOnPaste",
+    type: "checkbox",
+    default: false,
+    l10nLabel: "clearOnPaste",
   },
   {
     key: "defaultFilename",
@@ -19,7 +25,6 @@ export const options = [
     options: [
       { value: "formatted", l10nId: "formattedTime" },
       { value: "unix", l10nId: "unixTimestamp" },
-      { value: "unknown", text: "unknown.png" },
       { value: "custom", l10nId: "custom" },
     ],
   },
@@ -62,13 +67,13 @@ export const options = [
 ];
 
 export async function getAllSettings() {
-  const defaults = options.reduce((acc, curr) => {
-    acc[curr.key] = curr.default;
-    return acc;
-  }, {});
-
-  const stored = await browser.storage.local.get(Object.keys(defaults));
-  return { ...defaults, ...stored };
+  const stored = await browser.storage.local.get();
+  const settings = {};
+  for (const option of options) {
+    const val = stored[option.key];
+    settings[option.key] = val !== undefined ? val : option.default;
+  }
+  return settings;
 }
 
 export async function getSetting(key) {

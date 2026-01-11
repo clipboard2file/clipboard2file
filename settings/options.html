@@ -3,18 +3,20 @@
   <head>
     <title>Settings - Clipboard2File</title>
     <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/x-icon" href="../icons/clipboard2file.svg" />
     <style>
       :root {
-        --bg-color: #1a1a1a;
-        --card-bg: #252525;
-        --text-color: #f0f0f0;
-        --accent-color: #00ddff;
-        --border-color: #333;
-        --input-bg: #333;
-        --button-bg: #00ddff;
-        --button-text: #000;
-        --button-disabled: #555;
+        --bg-color: light-dark(#f2f4f6, #1a1a1a);
+        --card-bg: light-dark(#ffffff, #252525);
+        --text-color: light-dark(#1a1a1a, #f0f0f0);
+        --accent-color: light-dark(#0062f9, #00ddff);
+        --border-color: light-dark(#d1d5db, #333);
+        --input-bg: light-dark(#ffffff, #333);
+        --button-bg: light-dark(#0062f9, #00ddff);
+        --button-text: light-dark(#ffffff, #000000);
+        --button-disabled: light-dark(#e5e7eb, #555);
+        --button-disabled-text: light-dark(#9ca3af, #aaa);
       }
 
       * {
@@ -60,6 +62,7 @@
         margin-block-end: 15px;
         border-radius: 8px;
         border: 1px solid var(--border-color);
+        box-shadow: light-dark(0 1px 3px rgba(0, 0, 0, 0.1), none);
 
         &.inline-row {
           display: flex;
@@ -151,7 +154,7 @@
       }
 
       .filename-extension {
-        color: #888;
+        color: light-dark(#666, #888);
         font-size: 0.9rem;
         padding-inline-start: 2px;
         white-space: nowrap;
@@ -191,7 +194,7 @@
 
         &:disabled {
           background-color: var(--button-disabled);
-          color: #aaa;
+          color: var(--button-disabled-text);
           cursor: not-allowed;
           opacity: 0.7;
         }
@@ -206,7 +209,12 @@
     <script src="./options.js" type="module"></script>
     <div id="container">
       <header>
-        <img aria-hidden="true" src="../icons/clipboard2file.svg" height="48" width="48" />
+        <img
+          aria-hidden="true"
+          src="../icons/clipboard2file.svg"
+          height="48"
+          width="48"
+        />
         <h1 id="pageTitle">Clipboard2File Settings</h1>
       </header>
       <main id="root"></main>

@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Tyhjennä leikepöytä latauksen jälkeen"
+    "message": "Tyhjennä leikepöytä kuvan latauksen jälkeen"
   },
   "showFilenameBox": {
     "message": "Näytä tekstikenttä tiedostonimen muokkausta varten"
+  },
+  "showFormatToggleButton": {
+    "message": "Näytä painike kuvamuodon vaihtamiseen"
   },
   "defaultFilename": {
     "message": "Oletustiedostonimi"
@@ -21,7 +24,7 @@
     "message": "Kirjoita mukautettu tiedostonimi tähän"
   },
   "formattedTime": { "message": "Muotoiltu aika" },
-  "unixTimestamp": { "message": "UNIX-aikaleima" },
+  "unixTimestamp": { "message": "Muotoilematon aikaleima" },
   "custom": { "message": "Mukautettu" },
   "save": { "message": "Tallenna" },
   "showAllFiles": { "message": "Näytä kaikki tiedostot" }

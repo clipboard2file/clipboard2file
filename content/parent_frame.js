@@ -12,6 +12,9 @@ browser.runtime.onMessage.addListener(data => {
     const dialog = document.createElement("dialog");
     const iframe = document.createElement("iframe");
 
+    dialog.tabIndex = -1;
+    dialog.closedBy = "none";
+
     currentDialog = new WeakRef(dialog);
 
     dialog.appendChild(iframe);
@@ -40,6 +43,7 @@ browser.runtime.onMessage.addListener(data => {
         const popupUrl = browser.runtime.getURL(
           `content/popup.html?${params.toString()}`
         );
+
         iframe.contentWindow.location.replace(popupUrl);
 
         dialog.showModal();
@@ -51,9 +55,11 @@ browser.runtime.onMessage.addListener(data => {
       dialog.close();
       host.remove();
       port.onDisconnect.removeListener(cleanup);
+      window.removeEventListener("pagehide", cleanup);
     };
 
     port.onDisconnect.addListener(cleanup);
+    window.addEventListener("pagehide", cleanup, { once: true });
   }
 
   return false;

@@ -1,7 +1,7 @@
 function handleInputElement(input, event) {
   const port = browser.runtime.connect({ name: "input" });
 
-  port.onMessage.addListener(data => {
+  const listener = data => {
     if (data.type === "showPicker") {
       input.showPicker();
       port.disconnect();
@@ -10,6 +10,7 @@ function handleInputElement(input, event) {
 
     if (data.type === "files") {
       input.files = structuredClone(data.files);
+
       input.dispatchEvent(
         new Event("input", { bubbles: true, composed: true })
       );
@@ -25,7 +26,15 @@ function handleInputElement(input, event) {
       );
       port.disconnect();
     }
-  });
+  };
+
+  const cleanup = () => {
+    port.onMessage.removeListener(listener);
+    port.onDisconnect.removeListener(cleanup);
+  };
+
+  port.onMessage.addListener(listener);
+  port.onDisconnect.addListener(cleanup);
 
   const inputAttributes = {};
   for (const attr of ["accept", "capture", "multiple"]) {
@@ -34,10 +43,10 @@ function handleInputElement(input, event) {
     }
   }
 
-  const positionData = collectAnchorData(input, event);
+  const positionData = collectAnchorRects(input, event);
 
   port.postMessage({
-    type: "openPopup",
+    type: "inputClicked",
     inputAttributes,
     positionData,
   });
@@ -46,29 +55,13 @@ function handleInputElement(input, event) {
 window.addEventListener(
   "click",
   event => {
-    let target;
-    if (event.target.matches("input[type=file]:not([webkitdirectory])")) {
-      target = event.target;
-    } else {
-      try {
-        if (
-          event.originalTarget.matches(
-            "input[type=file]:not([webkitdirectory])"
-          )
-        ) {
-          target = event.originalTarget;
-        }
-      } catch {}
-    }
-
     if (
-      target &&
-      event.type === "click" &&
+      event.originalTarget.matches("input[type=file]:not([webkitdirectory])") &&
       navigator.userActivation.isActive &&
       event instanceof MouseEvent &&
       !event.defaultPreventedByPage
     ) {
-      handleInputElement(target, event);
+      handleInputElement(event.originalTarget, event);
       event.defaultPreventedByExtension = true;
       event.preventDefault();
     }
@@ -173,7 +166,6 @@ const overrides = {
         handleInputElement(this, event);
         event.defaultPreventedByExtension = true;
         event.preventDefault();
-        return;
       }
 
       const dispatched = this.dispatchEvent(event);
@@ -216,13 +208,13 @@ const overrides = {
       this instanceof HTMLInputElement &&
       this.matches("[type=file]:not([webkitdirectory])")
     ) {
-      handleInputElement(this);
-
       let event = new PointerEvent("click", {
         bubbles: true,
         composed: true,
         cancelable: true,
       });
+
+      handleInputElement(this, event);
 
       event.defaultPreventedByExtension = true;
       event.preventDefault();
@@ -259,7 +251,7 @@ const overrides = {
       navigator.userActivation.isActive &&
       this.matches("[type=file]:not([webkitdirectory])")
     ) {
-      handleInputElement(this);
+      handleInputElement(this, new PointerEvent("click"));
       return;
     }
 
@@ -375,45 +367,57 @@ function createPageError(error) {
   return new ErrorConstructor(error.message);
 }
 
-function collectAnchorData(input, event) {
-  const rect = input.getBoundingClientRect();
-  const positionData = {
-    inputRect: {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    },
+function collectAnchorRects(input, event) {
+  let positionData = {
     win: {
       mozInnerScreenX: window.mozInnerScreenX,
       mozInnerScreenY: window.mozInnerScreenY,
     },
   };
 
-  if (event) {
-    const target =
-      event.currentTarget instanceof Element
-        ? event.currentTarget
-        : event.explicitOriginalTarget;
-    let targetRect = null;
+  const inputRect = input.getBoundingClientRect();
 
-    if (target instanceof Element) {
-      const tr = target.getBoundingClientRect();
-      targetRect = {
-        left: tr.left,
-        top: tr.top,
-        width: tr.width,
-        height: tr.height,
+  positionData.inputRect = {
+    left: inputRect.left,
+    top: inputRect.top,
+    width: inputRect.width,
+    height: inputRect.height,
+  };
+
+  positionData.event = {
+    screenX: event.screenX,
+    screenY: event.screenY,
+    clientX: event.clientX,
+    clientY: event.clientY,
+  };
+
+  let target = event.explicitOriginalTarget;
+
+  if (target) {
+    if (!(target instanceof Element) && target.parentElement) {
+      target = target.parentElement;
+    }
+
+    if (target.control) {
+      const controlRect = target.control.getBoundingClientRect();
+      positionData.event.controlRect = {
+        left: controlRect.left,
+        top: controlRect.top,
+        width: controlRect.width,
+        height: controlRect.height,
       };
     }
 
-    positionData.event = {
-      isTrusted: event.isTrusted,
-      screenX: event.screenX,
-      screenY: event.screenY,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      targetRect,
+    if (target.openOrClosedShadowRoot && event.originalTarget) {
+      target = event.originalTarget;
+    }
+
+    const targetRect = target.getBoundingClientRect();
+    positionData.event.targetRect = {
+      left: targetRect.left,
+      top: targetRect.top,
+      width: targetRect.width,
+      height: targetRect.height,
     };
   }
 

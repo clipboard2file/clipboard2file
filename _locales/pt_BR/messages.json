@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Limpar área de transferência após o envio"
+    "message": "Limpar área de transferência após o envio da imagem"
   },
   "showFilenameBox": {
     "message": "Mostrar caixa de texto para editar o nome do arquivo"
+  },
+  "showFormatToggleButton": {
+    "message": "Mostrar botão para alterar o formato da imagem"
   },
   "defaultFilename": {
     "message": "Nome de arquivo padrão"

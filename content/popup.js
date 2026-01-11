@@ -5,7 +5,7 @@ browser.runtime.connect({ name: "popup" });
 const POPUP_WIDTH_PX = 300;
 const POPUP_HEIGHT_PX = 250;
 const SCREEN_MARGIN_PX = 8;
-const ANIMATION_DURATION_MS = 270;
+const ANIMATION_DURATION_MS = 200;
 
 const params = new URLSearchParams(window.location.search);
 
@@ -21,269 +21,277 @@ const mouseoverPromise = new Promise(resolve =>
   document.addEventListener("mouseover", resolve, { once: true })
 );
 
-window.addEventListener("pageshow", ({ persisted }) => {
-  if (persisted) {
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    e.preventDefault();
     browser.runtime.sendMessage({ type: "cancel" });
   }
 });
 
-const [initData, settings] = await Promise.all([
+document.addEventListener("pointerdown", e => {
+  if (e.target === document.body) {
+    browser.runtime.sendMessage({ type: "cancel" });
+  }
+});
+
+const [init, settings] = await Promise.all([
   browser.runtime.sendMessage({ type: "initPopup" }),
   getAllSettings(),
   waitforStableLayout(),
 ]);
 
-if (!initData) {
-  browser.runtime.sendMessage({ type: "cancel" });
+const {
+  clipboardImage,
+  positionData,
+  backgroundDevicePixelRatio,
+  backgroundPrefersDark,
+  inputAttributes,
+  isTopFrame,
+} = init;
+const popup = document.getElementById("popup");
+const filenameContainer = document.getElementById("filenameContainer");
+const filenameDiv = document.getElementById("basename");
+const formatToggle = document.getElementById("formatToggle");
+const floatingFormatToggle = document.getElementById("floatingFormatToggle");
+const preview = document.getElementById("preview");
+const previewImage = document.getElementById("previewImage");
+const showAllFiles = document.getElementById("showAllFiles");
+
+let lastSelection = null;
+
+const originalBlob = clipboardImage;
+let currentBlob = clipboardImage;
+let currentFormat = settings.defaultFileType;
+const jpegQuality = settings.jpegQuality / 100;
+
+const updateDPR = () => {
+  const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
+  document.body.style.setProperty("--devicePixelRatio", dpr);
+};
+
+const updateEmptyState = () => {
+  filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
+};
+
+const restoreSelection = () => {
+  if (!lastSelection) return;
+
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.setBaseAndExtent(
+    lastSelection.anchorNode,
+    lastSelection.anchorOffset,
+    lastSelection.focusNode,
+    lastSelection.focusOffset
+  );
+};
+
+const updatePreview = () => {
+  if (previewImage.src) {
+    URL.revokeObjectURL(previewImage.src);
+  }
+  previewImage.src = URL.createObjectURL(currentBlob);
+};
+
+const setFileType = async (type, saveToStorage = false) => {
+  popup.dataset.format = type;
+
+  if (type === "jpeg") {
+    currentBlob = await convertToJpeg(originalBlob, jpegQuality);
+  } else {
+    currentBlob = originalBlob;
+  }
+
+  currentFormat = type;
+
+  updatePreview();
+
+  if (saveToStorage) {
+    browser.storage.local.set({ defaultFileType: type });
+  }
+};
+
+let defaultFilename;
+if (settings.defaultFilename === "unix") {
+  defaultFilename = String(Temporal.Now.instant().epochMilliseconds);
+} else if (settings.defaultFilename === "custom") {
+  defaultFilename = settings.customFilenameText || "image";
 } else {
-  const {
-    clipboardImage,
-    positionData,
-    backgroundDevicePixelRatio,
-    inputAttributes,
-    isTopFrame,
-  } = initData;
+  defaultFilename = generateDefaultFilename();
+}
 
-  const root = document.getElementById("root");
-  const filenameContainer = document.getElementById("filenameContainer");
-  const filenameDiv = document.getElementById("filenameBase");
-  const filenameExt = document.getElementById("filenameExt");
-  const formatToggle = document.getElementById("formatToggle");
-  const preview = document.getElementById("preview");
-  const selectAll = document.getElementById("selectAll");
+filenameDiv.textContent = defaultFilename;
+filenameDiv.dataset.placeholder = defaultFilename;
+updateEmptyState();
 
-  let lastSelection = null;
-  let currentBlob = clipboardImage;
-  let previewUrl = null;
+if (settings.showFilenameBox) {
+  filenameContainer.hidden = false;
+}
 
-  const jpegQuality = settings.jpegQuality / 100;
-
-  const updateDPR = () => {
-    const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
-    document.body.style.setProperty("--devicePixelRatio", dpr);
-  };
-
-  const updateEmptyState = () => {
-    filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
-  };
-
-  const restoreSelection = () => {
-    if (!lastSelection) return;
-
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.setBaseAndExtent(
-      lastSelection.anchorNode,
-      lastSelection.anchorOffset,
-      lastSelection.focusNode,
-      lastSelection.focusOffset
-    );
-  };
-
-  const setFileType = async (type, saveToStorage = false) => {
-    let newBlob;
-
-    if (type === "jpeg") {
-      try {
-        newBlob = await convertToJpeg(clipboardImage, jpegQuality);
-        filenameExt.textContent = ".jpg";
-        formatToggle.textContent = "JPG";
-      } catch (e) {
-        console.error("JPG conversion failed", e);
-        return setFileType("png", false);
-      }
-    } else {
-      newBlob = clipboardImage;
-      filenameExt.textContent = ".png";
-      formatToggle.textContent = "PNG";
-    }
-
-    currentBlob = newBlob;
-    settings.defaultFileType = type;
-
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    previewUrl = URL.createObjectURL(currentBlob);
-    preview.style.backgroundImage = `url(${previewUrl})`;
-
-    if (saveToStorage) {
-      browser.storage.local.set({ defaultFileType: type });
-    }
-  };
-
-  let defaultFilename;
-  if (settings.defaultFilename === "unix") {
-    defaultFilename = String(Temporal.Now.instant().epochMilliseconds);
-  } else if (settings.defaultFilename === "unknown") {
-    defaultFilename = "unknown";
-  } else if (settings.defaultFilename === "custom") {
-    defaultFilename = settings.customFilenameText || "image";
-  } else {
-    defaultFilename = generateDefaultFilename();
-  }
-
-  filenameDiv.textContent = defaultFilename;
-  filenameDiv.dataset.placeholder = defaultFilename;
-  updateEmptyState();
-
-  if (!settings.showFilenameBox) {
-    filenameContainer.style.display = "none";
-  }
-
-  selectAll.textContent = browser.i18n.getMessage("showAllFiles");
-
-  await setFileType(settings.defaultFileType, false);
-
-  updateDPR();
-  window.addEventListener("resize", updateDPR);
-
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      browser.runtime.sendMessage({ type: "cancel" });
-    }
-  });
-
-  document.addEventListener("pointerdown", e => {
-    if (e.target === document.body) {
-      browser.runtime.sendMessage({ type: "cancel" });
-    }
-  });
-
-  document.addEventListener("selectionchange", () => {
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      if (filenameDiv.contains(range.commonAncestorContainer)) {
-        lastSelection = {
-          anchorNode: selection.anchorNode,
-          anchorOffset: selection.anchorOffset,
-          focusNode: selection.focusNode,
-          focusOffset: selection.focusOffset,
-        };
-      }
-    }
-  });
-
-  window.addEventListener("blur", e => {
-    if (e.target === window && document.activeElement === filenameDiv) {
-      restoreSelection();
-    }
-  });
-
-  filenameDiv.addEventListener("focus", restoreSelection);
-
-  filenameContainer.addEventListener("click", () => {
-    filenameDiv.focus();
-  });
-
-  filenameDiv.addEventListener("input", updateEmptyState);
-
-  filenameDiv.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      preview.click();
-    }
-  });
-
-  formatToggle.addEventListener("pointerdown", async e => {
-    if (e.button === 2) return;
-    e.preventDefault();
-    if (formatToggle.disabled) return;
-
-    formatToggle.disabled = true;
-    const newType = settings.defaultFileType === "jpeg" ? "png" : "jpeg";
-    await setFileType(newType, true);
-    formatToggle.disabled = false;
-  });
-
-  preview.addEventListener("click", () => {
-    const dataTransfer = new DataTransfer();
-
-    let base = filenameDiv.textContent.trim();
-    if (base.length === 0) {
-      base = defaultFilename;
-    }
-
-    base = base.replace(/\.(png|jpg|jpeg)$/i, "");
-
-    const isPng = currentBlob.type === "image/png";
-    const ext = isPng ? ".png" : ".jpg";
-    const filename = base + ext;
-
-    dataTransfer.items.add(
-      new File([currentBlob], filename, {
-        type: currentBlob.type,
-      })
-    );
-    browser.runtime.sendMessage({ type: "files", files: dataTransfer.files });
-  });
-
-  selectAll.addEventListener("click", () => {
-    root.style.opacity = "0";
-    if (isTopFrame) {
-      browser.runtime.sendMessage({ type: "showPicker" });
-    } else {
-      showPicker(inputAttributes);
-    }
-  });
-
+if (settings.showFormatToggleButton) {
   if (settings.showFilenameBox) {
-    filenameDiv.focus();
-    selectBaseName(filenameDiv);
-  }
-
-  const popupWidth =
-    (POPUP_WIDTH_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
-  const popupHeight =
-    (POPUP_HEIGHT_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
-  const screenMargin =
-    (SCREEN_MARGIN_PX * backgroundDevicePixelRatio) /
-    window.devicePixelRatio /
-    parentVisualViewport.scale;
-
-  const anchor = resolveAnchor({ ...positionData, isTopFrame });
-
-  const { popupX, popupY, scale } = await calculatePopupPosition(
-    anchor,
-    mouseoverPromise,
-    popupWidth,
-    popupHeight,
-    screenMargin
-  );
-
-  root.style.left = `${(popupX / window.visualViewport.width) * 100}%`;
-  root.style.top = `${(popupY / window.visualViewport.height) * 100}%`;
-  root.style.zoom = scale;
-
-  const { matches: prefersReducedMotion } = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  );
-  if (!prefersReducedMotion) {
-    let animation = root.animate(
-      [
-        {
-          transform: "skew(2deg, 1deg) scale(0.95)",
-          opacity: "0",
-        },
-        {
-          opacity: "1",
-          transform: "none",
-        },
-      ],
-      {
-        duration: ANIMATION_DURATION_MS,
-        easing: "cubic-bezier(.07, .95, 0, 1)",
-        fill: "forwards",
-      }
-    );
-    await animation.finished;
-    animation.commitStyles();
-    animation.cancel();
+    formatToggle.hidden = false;
   } else {
-    root.style.opacity = "1";
+    floatingFormatToggle.hidden = false;
   }
+}
+
+showAllFiles.textContent = browser.i18n.getMessage("showAllFiles");
+
+await setFileType(settings.defaultFileType, false);
+
+updateDPR();
+window.addEventListener("resize", updateDPR);
+
+document.addEventListener("selectionchange", () => {
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    if (filenameDiv.contains(range.commonAncestorContainer)) {
+      lastSelection = {
+        anchorNode: selection.anchorNode,
+        anchorOffset: selection.anchorOffset,
+        focusNode: selection.focusNode,
+        focusOffset: selection.focusOffset,
+      };
+    }
+  }
+});
+
+window.addEventListener("blur", e => {
+  if (e.target === window && document.activeElement === filenameDiv) {
+    restoreSelection();
+  }
+});
+
+filenameDiv.addEventListener("focus", restoreSelection);
+
+filenameContainer.addEventListener("click", e => {
+  if (e.target === formatToggle) {
+    return;
+  }
+
+  filenameDiv.focus();
+});
+
+filenameDiv.addEventListener("input", updateEmptyState);
+
+filenameDiv.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    preview.click();
+  }
+});
+
+const handleFormatToggle = async e => {
+  e.preventDefault();
+
+  if (e.button === 2) {
+    return;
+  }
+
+  const newType = currentFormat === "jpeg" ? "png" : "jpeg";
+  await setFileType(newType, true);
+};
+
+formatToggle.addEventListener("mousedown", handleFormatToggle);
+floatingFormatToggle.addEventListener("mousedown", handleFormatToggle);
+
+preview.addEventListener("click", () => {
+  let base = filenameDiv.textContent.trim();
+  if (base.length === 0) {
+    base = defaultFilename;
+  }
+
+  base = base.replace(/\.(png|jpg|jpeg)$/i, "");
+
+  const ext = currentFormat === "png" ? ".png" : ".jpg";
+  const filename = base + ext;
+
+  const file = new File([currentBlob], filename, { type: currentBlob.type });
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+
+  browser.runtime.sendMessage({
+    type: "files",
+    files: dataTransfer.files,
+    isClipboardImage: true,
+  });
+});
+
+showAllFiles.addEventListener("click", () => {
+  popup.style.opacity = "0";
+
+  if (isTopFrame) {
+    browser.runtime.sendMessage({ type: "showPicker" });
+  } else {
+    showPicker(inputAttributes);
+  }
+});
+
+if (settings.showFilenameBox) {
+  filenameDiv.focus();
+  selectBaseName(filenameDiv);
+}
+
+popup.toggleAttribute("prefersDark", backgroundPrefersDark);
+
+const popupWidth =
+  (POPUP_WIDTH_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
+const popupHeight =
+  (POPUP_HEIGHT_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
+const screenMargin =
+  (SCREEN_MARGIN_PX * backgroundDevicePixelRatio) /
+  window.devicePixelRatio /
+  parentVisualViewport.scale;
+
+const anchor = resolveAnchor({ ...positionData, isTopFrame });
+
+const { popupX, popupY, scale } = await calculatePopupPosition(
+  anchor,
+  mouseoverPromise,
+  popupWidth,
+  popupHeight,
+  screenMargin
+);
+
+popup.style.left = `${(popupX / window.visualViewport.width) * 100}%`;
+popup.style.top = `${(popupY / window.visualViewport.height) * 100}%`;
+popup.style.zoom = scale;
+
+try {
+  await previewImage.decode();
+} catch (error) {
+  console.error(error);
+}
+
+const { matches: prefersReducedMotion } = window.matchMedia(
+  "(prefers-reduced-motion: reduce)"
+);
+
+if (prefersReducedMotion) {
+  popup.style.opacity = "1";
+} else {
+  let animation = popup.animate(
+    [
+      {
+        transform: "skew(2deg, 1deg) scale(0.95)",
+        opacity: "0",
+      },
+      {
+        opacity: "1",
+        transform: "none",
+      },
+    ],
+    {
+      duration: ANIMATION_DURATION_MS,
+      easing: "cubic-bezier(.07, .95, 0, 1)",
+      fill: "forwards",
+    }
+  );
+  await animation.finished;
+  animation.commitStyles();
+  animation.cancel();
 }
 
 async function convertToJpeg(blob, quality) {
@@ -304,21 +312,13 @@ function showPicker(inputAttributes) {
     decoyInput.setAttribute(attrName, inputAttributes[attrName]);
   }
 
-  decoyInput.addEventListener(
-    "change",
-    e => {
-      browser.runtime.sendMessage({ type: "files", files: e.target.files });
-    },
-    { once: true }
-  );
+  decoyInput.addEventListener("change", e => {
+    browser.runtime.sendMessage({ type: "files", files: e.target.files });
+  });
 
-  decoyInput.addEventListener(
-    "cancel",
-    e => {
-      browser.runtime.sendMessage({ type: "cancel" });
-    },
-    { once: true }
-  );
+  decoyInput.addEventListener("cancel", e => {
+    browser.runtime.sendMessage({ type: "cancel" });
+  });
 
   decoyInput.showPicker();
 }
@@ -415,6 +415,13 @@ function resolveAnchor({ inputRect, win, event, isTopFrame }) {
 
     return isVisible && !isHuge;
   };
+
+  if (event?.controlRect?.width >= 0) {
+    const parentVisualRect = toParentVisualRect(event.controlRect);
+    if (isValidAnchor(parentVisualRect)) {
+      return parentVisualRect;
+    }
+  }
 
   if (event?.targetRect?.width >= 0) {
     const parentVisualRect = toParentVisualRect(event.targetRect);
@@ -621,21 +628,16 @@ function generateDefaultFilename() {
 }
 
 function waitforStableLayout() {
-  if (window.visualViewport.width >= 12) {
-    return;
-  }
-
   return new Promise(resolve => {
-    const controller = new AbortController();
-    const { signal } = controller;
-    const onResize = () => {
-      if (window.visualViewport.width >= 12) {
-        controller.abort();
-        resolve();
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        if (entry.contentRect.width >= 12) {
+          observer.disconnect();
+          resolve();
+          return;
+        }
       }
-    };
-    window.visualViewport.addEventListener("resize", onResize, {
-      signal,
     });
+    observer.observe(document.documentElement);
   });
 }

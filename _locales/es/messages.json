@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Limpiar portapapeles después de subir"
+    "message": "Limpiar portapapeles después de subir la imagen"
   },
   "showFilenameBox": {
     "message": "Mostrar cuadro de texto para editar el nombre de archivo"
+  },
+  "showFormatToggleButton": {
+    "message": "Mostrar botón para cambiar el formato de imagen"
   },
   "defaultFilename": {
     "message": "Nombre de archivo predeterminado"
@@ -21,7 +24,7 @@
     "message": "Escribe aquí el nombre de archivo personalizado"
   },
   "formattedTime": { "message": "Tiempo formateado" },
-  "unixTimestamp": { "message": "Marca de tiempo UNIX" },
+  "unixTimestamp": { "message": "Marca de tiempo sin formato" },
   "custom": { "message": "Personalizado" },
   "save": { "message": "Guardar" },
   "showAllFiles": { "message": "Mostrar todos los archivos" }

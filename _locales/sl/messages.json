@@ -1,12 +1,12 @@
 {
-  "settingsTitle": {
-    "message": "Nastavitve Clipboard2File"
-  },
   "clearOnPaste": {
-    "message": "Pošisti odložišče po nalaganju"
+    "message": "Počisti odložišče po nalaganju slike"
   },
   "showFilenameBox": {
     "message": "Prikaži besedilno polje za urejanje imena datoteke"
+  },
+  "showFormatToggleButton": {
+    "message": "Prikaži gumb za spreminjanje formata slike"
   },
   "defaultFilename": {
     "message": "Privzeto ime datoteke"

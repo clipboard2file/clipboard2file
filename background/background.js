@@ -3,150 +3,177 @@ import { getSetting } from "../settings/settings.js";
 const pendingSessions = new Map();
 const activeSessions = new Map();
 
-browser.runtime.onMessage.addListener((data, sender) => {
+browser.runtime.onMessage.addListener(async (message, sender) => {
   const tabId = sender.tab?.id;
 
-  const actions = {
-    initPopup: function () {
-      const session = activeSessions.get(tabId);
-      if (session) {
-        return Promise.resolve({
-          ...session.data,
-          backgroundDevicePixelRatio: window.devicePixelRatio,
-        });
-      }
-      return Promise.resolve();
-    },
-    files: async function () {
-      const session = activeSessions.get(tabId);
-      if (session) {
-        try {
-          session.inputPort.postMessage({
-            type: "files",
-            files: data.files,
-          });
-          if (await getSetting("clearOnPaste")) {
-            await navigator.clipboard.writeText("");
-          }
-        } catch (e) {}
-        cleanupSession(tabId);
-      }
-      return;
-    },
-    showPicker: function () {
-      const session = activeSessions.get(tabId);
-      if (session) {
-        try {
-          session.inputPort.postMessage({ type: "showPicker" });
-        } catch (e) {}
-        cleanupSession(tabId);
-      }
-      return Promise.resolve();
-    },
-    cancel: function () {
-      const session = activeSessions.get(tabId);
-      if (session) {
-        try {
-          session.inputPort.postMessage({ type: "cancel" });
-        } catch (e) {}
-        cleanupSession(tabId);
-      }
-      return Promise.resolve();
-    },
-  };
+  if (!tabId) {
+    return;
+  }
 
-  if (actions[data.type]) return actions[data.type]();
-  return false;
+  const session = activeSessions.get(tabId);
+
+  if (message.type === "initPopup") {
+    if (session) {
+      return {
+        ...session.data,
+        backgroundDevicePixelRatio: window.devicePixelRatio,
+        backgroundPrefersDark: window.matchMedia("(prefers-color-scheme: dark)")
+          .matches,
+      };
+    }
+    return null;
+  }
+
+  if (!session) {
+    return;
+  }
+
+  switch (message.type) {
+    case "files": {
+      try {
+        session.inputPort.postMessage({
+          type: "files",
+          files: message.files,
+        });
+
+        if (message.isClipboardImage && (await getSetting("clearOnPaste"))) {
+          navigator.clipboard.writeText("");
+        }
+      } catch (e) {}
+      cleanupSession(tabId);
+      break;
+    }
+    case "showPicker": {
+      try {
+        session.inputPort.postMessage({ type: "showPicker" });
+      } catch (e) {}
+      cleanupSession(tabId);
+      break;
+    }
+    case "cancel": {
+      try {
+        session.inputPort.postMessage({ type: "cancel" });
+      } catch (e) {}
+      cleanupSession(tabId);
+      break;
+    }
+  }
 });
 
 browser.runtime.onConnect.addListener(port => {
-  const tabId = port.sender?.tab?.id;
+  const tabId = port.sender.tab?.id;
 
-  if (!tabId) return;
+  if (!tabId) {
+    return;
+  }
 
-  if (port.name === "input") {
-    if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
-      port.disconnect();
-      return;
-    }
+  const addDisconnectListener = messageListener => {
+    const listener = () => {
+      port.onDisconnect.removeListener(listener);
 
-    port.onMessage.addListener(async msg => {
-      if (msg.type === "openPopup") {
-        const items = await navigator.clipboard.read();
-        const img = items.find(i => i.types.includes("image/png"));
-        let blob = img ? await img.getType("image/png") : null;
-
-        if (!blob) {
-          port.postMessage({ type: "showPicker" });
-          port.disconnect();
-          return;
-        }
-
-        if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
-          port.disconnect();
-          return;
-        }
-
-        const tagName = generateElementName();
-
-        const context = {
-          inputPort: port,
-          data: {
-            isTopFrame: port.sender.frameId === 0,
-            inputAttributes: msg.inputAttributes,
-            clipboardImage: blob,
-            positionData: msg.positionData,
-          },
-          tagName: tagName,
-          cssCode: `${tagName},
-                    ${tagName}::before,
-                    ${tagName}::after {
-                      all: unset !important;
-                    }`,
-        };
-
-        pendingSessions.set(tabId, context);
-
-        try {
-          await browser.tabs.insertCSS(tabId, {
-            code: context.cssCode,
-            cssOrigin: "user",
-          });
-        } catch (e) {
-          console.error("Failed to inject user CSS", e);
-        }
-
-        browser.tabs.sendMessage(
-          tabId,
-          { type: "spawn_popup", tagName },
-          { frameId: 0 }
-        );
+      if (messageListener) {
+        port.onMessage.removeListener(messageListener);
       }
-    });
 
-    port.onDisconnect.addListener(() => cleanupSession(tabId));
-  } else if (port.name === "parent") {
-    const pending = pendingSessions.get(tabId);
-
-    if (!pending) {
-      port.disconnect();
-      return;
-    }
-
-    const session = {
-      ...pending,
-      parentPort: port,
+      cleanupSession(tabId);
     };
+    port.onDisconnect.addListener(listener);
+  };
 
-    activeSessions.set(tabId, session);
-    pendingSessions.delete(tabId);
+  switch (port.name) {
+    case "input": {
+      if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
+        port.disconnect();
+        return;
+      }
 
-    port.onDisconnect.addListener(() => cleanupSession(tabId));
-  } else if (port.name === "popup") {
-    const session = activeSessions.get(tabId);
-    if (session) {
-      session.popupPort = port;
-      port.onDisconnect.addListener(() => cleanupSession(tabId));
+      const listener = async message => {
+        if (message.type === "inputClicked") {
+          const items = await navigator.clipboard.read();
+          const img = items.find(i => i.types.includes("image/png"));
+          let blob = img ? await img.getType("image/png") : null;
+
+          if (!blob) {
+            port.postMessage({ type: "showPicker" });
+            port.disconnect();
+            return;
+          }
+
+          if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
+            port.disconnect();
+            return;
+          }
+
+          const tagName = generateElementName();
+
+          const context = {
+            inputPort: port,
+            data: {
+              isTopFrame: port.sender.frameId === 0,
+              inputAttributes: message.inputAttributes,
+              clipboardImage: blob,
+              positionData: message.positionData,
+            },
+            cssCode: `${tagName},
+                      ${tagName}::before,
+                      ${tagName}::after {
+                        all: unset !important;
+                      }`,
+          };
+
+          pendingSessions.set(tabId, context);
+
+          try {
+            await browser.tabs.insertCSS(tabId, {
+              code: context.cssCode,
+              cssOrigin: "user",
+            });
+          } catch (e) {
+            console.error("Failed to inject user CSS", e);
+          }
+
+          browser.tabs.sendMessage(
+            tabId,
+            { type: "spawn_popup", tagName },
+            { frameId: 0 }
+          );
+        }
+      };
+
+      port.onMessage.addListener(listener);
+      addDisconnectListener(listener);
+      break;
+    }
+    case "parent": {
+      const pendingSession = pendingSessions.get(tabId);
+
+      if (!pendingSession) {
+        port.disconnect();
+        return;
+      }
+
+      const activeSession = {
+        ...pendingSession,
+        parentPort: port,
+      };
+
+      activeSessions.set(tabId, activeSession);
+      pendingSessions.delete(tabId);
+
+      addDisconnectListener();
+      break;
+    }
+    case "popup": {
+      const activeSession = activeSessions.get(tabId);
+
+      if (!activeSession) {
+        port.disconnect();
+        return;
+      }
+
+      activeSession.popupPort = port;
+      addDisconnectListener();
+      break;
     }
   }
 });

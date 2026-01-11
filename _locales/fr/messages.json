@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Vider le presse-papiers après le téléchargement"
+    "message": "Vider le presse-papiers après le téléchargement de l'image"
   },
   "showFilenameBox": {
     "message": "Afficher la zone de texte pour modifier le nom de fichier"
+  },
+  "showFormatToggleButton": {
+    "message": "Afficher le bouton pour changer le format d'image"
   },
   "defaultFilename": {
     "message": "Nom de fichier par défaut"
@@ -21,7 +24,7 @@
     "message": "Saisissez le nom de fichier personnalisé ici"
   },
   "formattedTime": { "message": "Heure formatée" },
-  "unixTimestamp": { "message": "Horodatage UNIX" },
+  "unixTimestamp": { "message": "Horodatage brut" },
   "custom": { "message": "Personnalisé" },
   "save": { "message": "Enregistrer" },
   "showAllFiles": { "message": "Afficher tous les fichiers" }

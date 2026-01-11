@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Cancella appunti dopo il caricamento"
+    "message": "Cancella appunti dopo il caricamento dell'immagine"
   },
   "showFilenameBox": {
     "message": "Mostra casella di testo per modificare il nome del file"
+  },
+  "showFormatToggleButton": {
+    "message": "Mostra pulsante per cambiare formato immagine"
   },
   "defaultFilename": {
     "message": "Nome file predefinito"

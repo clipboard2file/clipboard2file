@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Zwischenablage nach dem Hochladen leeren"
+    "message": "Zwischenablage nach dem Hochladen des Bildes leeren"
   },
   "showFilenameBox": {
     "message": "Textfeld zum Bearbeiten des Dateinamens anzeigen"
+  },
+  "showFormatToggleButton": {
+    "message": "Schaltfläche zum Ändern des Bildformats anzeigen"
   },
   "defaultFilename": {
     "message": "Standard-Dateiname"
@@ -21,7 +24,7 @@
     "message": "Benutzerdefinierten Dateinamen hier eingeben"
   },
   "formattedTime": { "message": "Formatierte Zeit" },
-  "unixTimestamp": { "message": "UNIX-Zeitstempel" },
+  "unixTimestamp": { "message": "Unformatierter Zeitstempel" },
   "custom": { "message": "Benutzerdefiniert" },
   "save": { "message": "Speichern" },
   "showAllFiles": { "message": "Alle Dateien anzeigen" }

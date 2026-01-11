@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Εκκαθάριση πρόχειρου μετά τη μεταφόρτωση"
+    "message": "Εκκαθάριση πρόχειρου μετά τη μεταφόρτωση της εικόνας"
   },
   "showFilenameBox": {
     "message": "Εμφάνιση πλαισίου κειμένου για επεξεργασία ονόματος αρχείου"
+  },
+  "showFormatToggleButton": {
+    "message": "Εμφάνιση κουμπιού για αλλαγή μορφής εικόνας"
   },
   "defaultFilename": {
     "message": "Προεπιλεγμένο όνομα αρχείου"
@@ -21,7 +24,7 @@
     "message": "Πληκτρολογήστε προσαρμοσμένο όνομα αρχείου εδώ"
   },
   "formattedTime": { "message": "Μορφοποιημένη ώρα" },
-  "unixTimestamp": { "message": "Χρονοσφραγίδα UNIX" },
+  "unixTimestamp": { "message": "Ανεπεξέργαστη χρονοσφραγίδα" },
   "custom": { "message": "Προσαρμοσμένο" },
   "save": { "message": "Αποθήκευση" },
   "showAllFiles": { "message": "Εμφάνιση όλων των αρχείων" }

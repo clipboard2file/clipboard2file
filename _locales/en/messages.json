@@ -1,9 +1,12 @@
 {
   "clearOnPaste": {
-    "message": "Clear clipboard after uploading"
+    "message": "Clear clipboard after uploading image"
   },
   "showFilenameBox": {
     "message": "Show text box for editing filename"
+  },
+  "showFormatToggleButton": {
+    "message": "Show button for changing image format"
   },
   "defaultFilename": {
     "message": "Default filename"

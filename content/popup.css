@@ -1,16 +1,20 @@
 :root {
-  --filenameFont: rgb(251, 251, 254);
-  --filenameBackground: rgb(28, 27, 34);
-  --filenameFocus: rgb(53, 132, 228);
-  --selectAll: rgb(0, 221, 255);
-  --selectAllHover: rgb(128, 235, 255);
-  --selectAllActive: rgb(170, 242, 255);
-  --selectAllFont: rgb(21, 20, 26);
+  --filenameFont: light-dark(#15141a, #fbfbfe);
+  --filenameBackground: light-dark(#f0f0f4, #1c1b22);
+  --filenameBorder: transparent;
+  --filenameFocus: #3584e4;
+  --popupBg: light-dark(#ffffff, #42414d);
+  --popupBorder: light-dark(#cfcfd8, #52525e);
+  --popupShadow: light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.2));
+  --toggleText: light-dark(#15141a, #ffffff);
+  --showAllFiles: light-dark(#0062f9, #00ddff);
+  --showAllFilesText: light-dark(#ffffff, #1c1b22);
+  --showAllFilesHover: light-dark(#0052cc, #80ebff);
+  --showAllFilesActive: light-dark(#0042a9, #aaf2ff);
 }
 
 * {
   box-sizing: border-box;
-  text-rendering: optimizeLegibility;
 }
 
 html,
@@ -21,7 +25,7 @@ body {
   padding: 0;
   overflow: hidden;
   background: transparent;
-  color-scheme: light;
+  text-rendering: optimizeLegibility;
 
   &:focus {
     outline: none;
@@ -29,151 +33,239 @@ body {
 }
 
 button {
+  padding-block: 0;
   border: none;
-  padding-block: 0px;
   border-radius: calc(4px / var(--devicePixelRatio));
   outline-offset: calc(2px / var(--devicePixelRatio));
 }
 
-#root {
+#popup {
   position: fixed;
-  opacity: 0;
-
   display: flex;
   flex-flow: column;
   width: calc(300px / var(--devicePixelRatio));
   height: calc(250px / var(--devicePixelRatio));
   padding: calc(8px / var(--devicePixelRatio));
 
-  background-color: rgb(66, 65, 77);
-  border: calc(1px / var(--devicePixelRatio)) rgb(82, 82, 94) solid;
+  background-color: var(--popupBg);
+  border: calc(1px / var(--devicePixelRatio)) var(--popupBorder) solid;
   border-radius: calc(8px / var(--devicePixelRatio));
-  box-shadow: 0 calc(2px / var(--devicePixelRatio))
-    calc(14px / var(--devicePixelRatio)) 0 rgba(0, 0, 0, 0.2);
-}
+  box-shadow: 0 calc(4px / var(--devicePixelRatio))
+    calc(16px / var(--devicePixelRatio)) 0 var(--popupShadow);
 
-#filenameContainer {
-  display: flex;
-  align-items: center;
-  height: calc(50px / var(--devicePixelRatio));
-  margin-bottom: calc(10px / var(--devicePixelRatio));
-  padding-inline: calc(8px / var(--devicePixelRatio));
+  opacity: 0;
 
-  background-color: var(--filenameBackground);
-  border-radius: calc(4px / var(--devicePixelRatio));
-  overflow: hidden;
-  cursor: text;
+  color-scheme: light;
 
-  &:focus-within {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
+  &[prefersDark] {
+    color-scheme: dark;
   }
 
-  &:not(:focus-within) #filenameBase::selection {
-    background: transparent;
-  }
-}
-
-#filenameBase {
-  display: inline-flex;
-  flex: 0 1 auto;
-  overflow: hidden;
-
-  color: var(--filenameFont);
-  font-family: sans-serif;
-  font-size: calc(14px / var(--devicePixelRatio));
-  white-space: nowrap;
-  outline: none;
-
-  &.empty {
-    &::after {
-      content: attr(data-placeholder);
-      display: inline-flex;
-      font-family: inherit;
-      color: inherit;
-      opacity: 0.5;
-      pointer-events: none;
+  &[data-format="png"] {
+    #ext::after {
+      content: ".png";
     }
 
-    & > br {
-      display: none;
+    #formatToggle span::after,
+    #floatingFormatToggle span::after {
+      content: "PNG";
     }
   }
-}
 
-#filenameExt {
-  flex: 0 0 auto;
-  margin-right: auto;
+  &[data-format="jpeg"] {
+    #ext::after {
+      content: ".jpg";
+    }
 
-  color: var(--filenameFont);
-  font-family: sans-serif;
-  font-size: calc(14px / var(--devicePixelRatio));
-  white-space: pre;
-
-  opacity: 0.5;
-  user-select: none;
-  pointer-events: none;
-}
-
-#formatToggle {
-  display: flex;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding-block: calc(3px / var(--devicePixelRatio));
-  padding-inline: calc(6px / var(--devicePixelRatio));
-
-  color: white;
-  font-size: calc(13px / var(--devicePixelRatio));
-  font-weight: 700;
-  text-transform: uppercase;
-
-  background-color: rgba(60, 60, 60, 1);
-
-  &:hover {
-    background-color: rgba(90, 90, 90, 1);
-  }
-
-  &:focus-visible {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+    #formatToggle span::after,
+    #floatingFormatToggle span::after {
+      content: "JPG";
+    }
   }
 }
 
 #preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
+  padding: 0;
+  overflow: hidden;
+  background-color: light-dark(rgba(0, 0, 0, 0.05), transparent);
 
-  background-color: unset;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 
   &:is(:hover, :focus-within) {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
   }
 
   &:focus {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAllHover);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFilesHover);
   }
 }
 
-#selectAll {
+#filenameContainer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: calc(24px / var(--devicePixelRatio));
+  margin-bottom: calc(10px / var(--devicePixelRatio));
+  padding-block: calc(6px / var(--devicePixelRatio));
+  padding-inline: calc(8px / var(--devicePixelRatio));
+  overflow: hidden;
+
+  background-color: var(--filenameBackground);
+  border: calc(1px / var(--devicePixelRatio)) solid var(--filenameBorder);
+  border-radius: calc(4px / var(--devicePixelRatio));
+  cursor: text;
+
+  &[hidden] {
+    display: none !important;
+  }
+
+  &:focus-within {
+    border-color: var(--filenameFocus);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
+    outline-offset: calc(-1px / var(--devicePixelRatio));
+  }
+
+  &:not(:focus-within) #basename::selection {
+    background: transparent;
+  }
+
+  #filename {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+
+    #basename {
+      display: inline-flex;
+      flex: 0 1 auto;
+      overflow: hidden;
+      color: var(--filenameFont);
+      font-family: sans-serif;
+      font-size: calc(14px / var(--devicePixelRatio));
+      white-space: nowrap;
+      outline: none;
+
+      &.empty {
+        &::after {
+          content: attr(data-placeholder);
+          display: inline-flex;
+          color: inherit;
+          font-family: inherit;
+          opacity: 0.5;
+          pointer-events: none;
+          user-select: none;
+        }
+
+        & > br {
+          display: none;
+        }
+      }
+    }
+
+    #ext {
+      flex: 0 0 auto;
+      color: var(--filenameFont);
+      font-family: sans-serif;
+      font-size: calc(14px / var(--devicePixelRatio));
+      white-space: pre;
+      opacity: 0.5;
+      pointer-events: none;
+      user-select: none;
+    }
+  }
+}
+
+#formatToggle,
+#floatingFormatToggle {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  padding-block: calc(4px / var(--devicePixelRatio));
+  padding-inline: calc(8px / var(--devicePixelRatio));
+
+  color: var(--toggleText);
+  font: menu;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 0 calc(4px / var(--devicePixelRatio))
+    light-dark(transparent, rgba(0, 0, 0, 0.5));
+
+  span {
+    pointer-events: none;
+  }
+
+  &[hidden] {
+    display: none !important;
+  }
+}
+
+#formatToggle {
+  margin-inline-start: calc(6px / var(--devicePixelRatio));
+  font-size: calc(13px / var(--devicePixelRatio));
+  line-height: calc(14px / var(--devicePixelRatio));
+  border-radius: calc(4px / var(--devicePixelRatio));
+  background-color: light-dark(rgba(21, 20, 26, 0.07), #3c3c3c);
+
+  &:hover {
+    background-color: light-dark(rgba(21, 20, 26, 0.14), #5a5a5a);
+  }
+}
+
+#floatingFormatToggle {
+  position: absolute;
+  top: calc(12px / var(--devicePixelRatio));
+  right: calc(12px / var(--devicePixelRatio));
+
+  font-size: calc(15px / var(--devicePixelRatio));
+  line-height: calc(20px / var(--devicePixelRatio));
+
+  background-color: light-dark(#ffffff, #1c1b22);
+  border: calc(1px / var(--devicePixelRatio)) solid
+    light-dark(var(--popupBorder), #1c1b22);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: calc(-6px / var(--devicePixelRatio));
+  }
+
+  &:hover {
+    background-color: light-dark(#e6e6e6, #2b2a33);
+    border-color: light-dark(var(--popupBorder), #2b2a33);
+  }
+}
+
+#showAllFiles {
   min-height: calc(32px / var(--devicePixelRatio));
   margin-top: calc(10px / var(--devicePixelRatio));
 
+  color: var(--showAllFilesText);
   font: menu;
   font-size: calc(14px / var(--devicePixelRatio));
   font-weight: 600;
 
-  background-color: var(--selectAll);
+  background-color: var(--showAllFiles);
 
   &:hover {
-    background-color: var(--selectAllHover);
+    background-color: var(--showAllFilesHover);
   }
 
   &:active {
-    background-color: var(--selectAllActive);
+    background-color: var(--showAllFilesActive);
   }
 
   &:focus-visible {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--selectAll);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
+    outline-offset: calc(2px / var(--devicePixelRatio));
   }
 }
