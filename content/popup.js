@@ -186,7 +186,10 @@ filenameDiv.addEventListener("keydown", e => {
 const handleFormatToggle = async e => {
   e.preventDefault();
 
-  if (e.button === 2) {
+  if (
+    e.button === 2 ||
+    (e.type === "click" && e.mozInputSource === MouseEvent.MOZ_SOURCE_MOUSE)
+  ) {
     return;
   }
 
@@ -196,6 +199,8 @@ const handleFormatToggle = async e => {
 
 formatToggle.addEventListener("mousedown", handleFormatToggle);
 floatingFormatToggle.addEventListener("mousedown", handleFormatToggle);
+formatToggle.addEventListener("click", handleFormatToggle);
+floatingFormatToggle.addEventListener("click", handleFormatToggle);
 
 preview.addEventListener("click", () => {
   let base = filenameDiv.textContent.trim();

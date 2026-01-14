@@ -128,14 +128,10 @@ button {
     display: none !important;
   }
 
-  &:focus-within {
+  &:has(#filename:focus-within) {
     border-color: var(--filenameFocus);
     outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
     outline-offset: calc(-1px / var(--devicePixelRatio));
-  }
-
-  &:not(:focus-within) #basename::selection {
-    background: transparent;
   }
 
   #filename {
@@ -154,6 +150,10 @@ button {
       font-size: calc(14px / var(--devicePixelRatio));
       white-space: nowrap;
       outline: none;
+
+      &:not(:focus)::selection {
+        background: transparent;
+      }
 
       &.empty {
         &::after {
@@ -206,6 +206,11 @@ button {
 
   &[hidden] {
     display: none !important;
+  }
+
+  &:focus-visible {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
+    outline-offset: calc(2px / var(--devicePixelRatio));
   }
 }
 
