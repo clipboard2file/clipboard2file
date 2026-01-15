@@ -1,15 +1,15 @@
 function handleInputElement(input, event) {
   const port = browser.runtime.connect({ name: "input" });
 
-  const listener = data => {
-    if (data.type === "showPicker") {
+  const listener = message => {
+    if (message.type === "showPicker") {
       input.showPicker();
       port.disconnect();
       return;
     }
 
-    if (data.type === "files") {
-      input.files = structuredClone(data.files);
+    if (message.type === "files") {
+      input.files = structuredClone(message.files);
 
       input.dispatchEvent(
         new Event("input", { bubbles: true, composed: true })
@@ -20,7 +20,7 @@ function handleInputElement(input, event) {
       port.disconnect();
     }
 
-    if (data.type === "cancel") {
+    if (message.type === "cancel") {
       input.dispatchEvent(
         new Event("cancel", { bubbles: true, composed: false })
       );
@@ -183,8 +183,8 @@ const overrides = {
       if (
         dialog?.isConnected &&
         this instanceof HTMLButtonElement &&
-        event instanceof Event &&
-        this.hasAttribute("command")
+        this.hasAttribute("command") &&
+        event instanceof Event
       ) {
         dialog.close();
         let dispatched = this.dispatchEvent(event);

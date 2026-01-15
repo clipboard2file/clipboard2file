@@ -11,6 +11,7 @@
   --showAllFilesText: light-dark(#ffffff, #1c1b22);
   --showAllFilesHover: light-dark(#0052cc, #80ebff);
   --showAllFilesActive: light-dark(#0042a9, #aaf2ff);
+  --textPreviewFont: light-dark(#15141a, #fbfbfe);
 }
 
 * {
@@ -98,6 +99,21 @@ button {
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  #textPreview {
+    width: 100%;
+    height: 100%;
+    padding: calc(8px / var(--devicePixelRatio));
+    overflow: auto;
+    font-family: sans-serif;
+    font-size: calc(12px / var(--devicePixelRatio));
+    color: var(--textPreviewFont);
+    text-align: left;
+    white-space: pre;
+    word-break: normal;
+    user-select: none;
+    background-color: light-dark(transparent, #2b2a33);
   }
 
   &:is(:hover, :focus-within) {
@@ -210,7 +226,7 @@ button {
 
   &:focus-visible {
     outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
-    outline-offset: calc(2px / var(--devicePixelRatio));
+    outline-offset: 0px;
   }
 }
 

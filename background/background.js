@@ -30,30 +30,31 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
 
   switch (message.type) {
     case "files": {
-      try {
-        session.inputPort.postMessage({
-          type: "files",
-          files: message.files,
-        });
+      session.inputPort.postMessage({
+        type: "files",
+        files: message.files,
+      });
 
-        if (message.isClipboardImage && (await getSetting("clearOnPaste"))) {
+      if (message.isFromClipboard) {
+        const setting =
+          session.data.clipboardType === "text"
+            ? "clearOnPasteText"
+            : "clearOnPasteImage";
+
+        if (await getSetting(setting)) {
           navigator.clipboard.writeText("");
         }
-      } catch (e) {}
+      }
       cleanupSession(tabId);
       break;
     }
     case "showPicker": {
-      try {
-        session.inputPort.postMessage({ type: "showPicker" });
-      } catch (e) {}
+      session.inputPort.postMessage({ type: "showPicker" });
       cleanupSession(tabId);
       break;
     }
     case "cancel": {
-      try {
-        session.inputPort.postMessage({ type: "cancel" });
-      } catch (e) {}
+      session.inputPort.postMessage({ type: "cancel" });
       cleanupSession(tabId);
       break;
     }
@@ -90,16 +91,38 @@ browser.runtime.onConnect.addListener(port => {
       const listener = async message => {
         if (message.type === "inputClicked") {
           const items = await navigator.clipboard.read();
+
+          let blob = null;
+          let blobType = null;
+
           const img = items.find(i => i.types.includes("image/png"));
-          let blob = img ? await img.getType("image/png") : null;
+
+          if (img && (await getSetting("enableImagePaste"))) {
+            const imgBlob = await img.getType("image/png");
+            if (imgBlob.size > 0) {
+              blob = await img.getType("image/png");
+              blobType = "image";
+            }
+          }
 
           if (!blob) {
-            port.postMessage({ type: "showPicker" });
+            const textItem = items.find(i => i.types.includes("text/plain"));
+            if (textItem && (await getSetting("enableTextPaste"))) {
+              const textBlob = await textItem.getType("text/plain");
+              if (textBlob.size > 0) {
+                blob = textBlob;
+                blobType = "text";
+              }
+            }
+          }
+
+          if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
             port.disconnect();
             return;
           }
 
-          if (activeSessions.has(tabId) || pendingSessions.has(tabId)) {
+          if (!blob) {
+            port.postMessage({ type: "showPicker" });
             port.disconnect();
             return;
           }
@@ -111,7 +134,8 @@ browser.runtime.onConnect.addListener(port => {
             data: {
               isTopFrame: port.sender.frameId === 0,
               inputAttributes: message.inputAttributes,
-              clipboardImage: blob,
+              clipboardBlob: blob,
+              clipboardType: blobType,
               positionData: message.positionData,
             },
             cssCode: `${tagName},
@@ -187,17 +211,9 @@ function cleanupSession(tabId) {
     browser.tabs
       .removeCSS(tabId, { code: active.cssCode, cssOrigin: "user" })
       .catch(() => {});
-
-    try {
-      active.inputPort.disconnect();
-    } catch (e) {}
-    try {
-      active.parentPort.disconnect();
-    } catch (e) {}
-    try {
-      active.popupPort?.disconnect();
-    } catch (e) {}
-    return;
+    active.inputPort.disconnect();
+    active.parentPort.disconnect();
+    active.popupPort?.disconnect();
   }
 
   if (pending) {
@@ -205,29 +221,21 @@ function cleanupSession(tabId) {
     browser.tabs
       .removeCSS(tabId, { code: pending.cssCode, cssOrigin: "user" })
       .catch(() => {});
-    try {
-      pending.inputPort.disconnect();
-    } catch (e) {}
+    pending.inputPort.disconnect();
   }
 }
 
 function generateElementName(length = 10) {
   const letters = "abcdefghijklmnopqrstuvwxyz";
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  function rand(set) {
-    const buf = new Uint8Array(1);
-    crypto.getRandomValues(buf);
-    return set[buf[0] % set.length];
-  }
-  const result = new Array(length);
-  result[0] = rand(letters);
-  const dashIndex =
-    1 + (crypto.getRandomValues(new Uint8Array(1))[0] % (length - 2));
+  const randomValues = new Uint32Array(length + 1);
+  crypto.getRandomValues(randomValues);
+  const result = Array.from({ length }, (_, i) => {
+    if (i === 0) return letters[randomValues[i] % letters.length];
+    return chars[randomValues[i] % chars.length];
+  });
+  const dashIndex = 1 + (randomValues[length] % (length - 2));
   result[dashIndex] = "-";
-  for (let i = 1; i < length; i++) {
-    if (result[i] === "-") continue;
-    result[i] = rand(chars);
-  }
   return result.join("");
 }
 

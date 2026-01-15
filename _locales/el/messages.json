@@ -1,7 +1,4 @@
 {
-  "clearOnPaste": {
-    "message": "Εκκαθάριση πρόχειρου μετά τη μεταφόρτωση της εικόνας"
-  },
   "showFilenameBox": {
     "message": "Εμφάνιση πλαισίου κειμένου για επεξεργασία ονόματος αρχείου"
   },
@@ -27,5 +24,20 @@
   "unixTimestamp": { "message": "Ανεπεξέργαστη χρονοσφραγίδα" },
   "custom": { "message": "Προσαρμοσμένο" },
   "save": { "message": "Αποθήκευση" },
-  "showAllFiles": { "message": "Εμφάνιση όλων των αρχείων" }
+  "showAllFiles": { "message": "Εμφάνιση όλων των αρχείων" },
+  "enableImagePaste": { "message": "Ενεργοποίηση επικόλλησης εικόνων" },
+  "enableTextPaste": { "message": "Ενεργοποίηση επικόλλησης κειμένου" },
+  "textExtensionLabel": { "message": "Προεπιλεγμένη επέκταση αρχείου" },
+  "imageSettings": { "message": "Εικόνες" },
+  "textSettings": { "message": "Κείμενο" },
+  "clearOnPasteImage": {
+    "message": "Εκκαθάριση πρόχειρου μετά τη μεταφόρτωση της εικόνας"
+  },
+  "clearOnPasteText": {
+    "message": "Εκκαθάριση πρόχειρου μετά τη μεταφόρτωση του κειμένου"
+  },
+  "themeLabel": { "message": "Θέμα" },
+  "themeAuto": { "message": "Αυτόματο" },
+  "themeLight": { "message": "Φωτεινό" },
+  "themeDark": { "message": "Σκοτεινό" }
 }

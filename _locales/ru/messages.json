@@ -1,7 +1,4 @@
 {
-  "clearOnPaste": {
-    "message": "Очистить буфер обмена после загрузки изображения"
-  },
   "showFilenameBox": {
     "message": "Показать поле для редактирования имени файла"
   },
@@ -27,5 +24,20 @@
   "unixTimestamp": { "message": "Необработанная метка времени" },
   "custom": { "message": "Пользовательское" },
   "save": { "message": "Сохранить" },
-  "showAllFiles": { "message": "Показать все файлы" }
+  "showAllFiles": { "message": "Показать все файлы" },
+  "enableImagePaste": { "message": "Включить вставку изображений" },
+  "enableTextPaste": { "message": "Включить вставку текста" },
+  "textExtensionLabel": { "message": "Расширение файла по умолчанию" },
+  "imageSettings": { "message": "Изображения" },
+  "textSettings": { "message": "Текст" },
+  "clearOnPasteImage": {
+    "message": "Очистить буфер обмена после загрузки изображения"
+  },
+  "clearOnPasteText": {
+    "message": "Очистить буфер обмена после загрузки текста"
+  },
+  "themeLabel": { "message": "Тема" },
+  "themeAuto": { "message": "Авто" },
+  "themeLight": { "message": "Светлая" },
+  "themeDark": { "message": "Темная" }
 }

@@ -1,7 +1,4 @@
 {
-  "clearOnPaste": {
-    "message": "Wyczyścić schowek po przesłaniu obrazu"
-  },
   "showFilenameBox": {
     "message": "Pokaż pole tekstowe do edycji nazwy pliku"
   },
@@ -27,5 +24,16 @@
   "unixTimestamp": { "message": "Surowy znacznik czasu" },
   "custom": { "message": "Niestandardowy" },
   "save": { "message": "Zapisz" },
-  "showAllFiles": { "message": "Pokaż wszystkie pliki" }
+  "showAllFiles": { "message": "Pokaż wszystkie pliki" },
+  "enableImagePaste": { "message": "Włącz wklejanie obrazów" },
+  "enableTextPaste": { "message": "Włącz wklejanie tekstu" },
+  "textExtensionLabel": { "message": "Domyślne rozszerzenie pliku" },
+  "imageSettings": { "message": "Obrazy" },
+  "textSettings": { "message": "Tekst" },
+  "clearOnPasteImage": { "message": "Wyczyścić schowek po przesłaniu obrazu" },
+  "clearOnPasteText": { "message": "Wyczyścić schowek po przesłaniu tekstu" },
+  "themeLabel": { "message": "Motyw" },
+  "themeAuto": { "message": "Automatyczny" },
+  "themeLight": { "message": "Jasny" },
+  "themeDark": { "message": "Ciemny" }
 }

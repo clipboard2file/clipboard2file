@@ -1,7 +1,4 @@
 {
-  "clearOnPaste": {
-    "message": "Tyhjennä leikepöytä kuvan latauksen jälkeen"
-  },
   "showFilenameBox": {
     "message": "Näytä tekstikenttä tiedostonimen muokkausta varten"
   },
@@ -27,5 +24,20 @@
   "unixTimestamp": { "message": "Muotoilematon aikaleima" },
   "custom": { "message": "Mukautettu" },
   "save": { "message": "Tallenna" },
-  "showAllFiles": { "message": "Näytä kaikki tiedostot" }
+  "showAllFiles": { "message": "Näytä kaikki tiedostot" },
+  "enableImagePaste": { "message": "Ota kuvien liittäminen käyttöön" },
+  "enableTextPaste": { "message": "Ota tekstin liittäminen käyttöön" },
+  "textExtensionLabel": { "message": "Oletustiedostopääte" },
+  "imageSettings": { "message": "Kuvat" },
+  "textSettings": { "message": "Teksti" },
+  "clearOnPasteImage": {
+    "message": "Tyhjennä leikepöytä kuvan latauksen jälkeen"
+  },
+  "clearOnPasteText": {
+    "message": "Tyhjennä leikepöytä tekstin latauksen jälkeen"
+  },
+  "themeLabel": { "message": "Teema" },
+  "themeAuto": { "message": "Automaattinen" },
+  "themeLight": { "message": "Vaalea" },
+  "themeDark": { "message": "Tumma" }
 }

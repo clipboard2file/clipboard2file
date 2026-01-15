@@ -1,7 +1,4 @@
 {
-  "clearOnPaste": {
-    "message": "Zwischenablage nach dem Hochladen des Bildes leeren"
-  },
   "showFilenameBox": {
     "message": "Textfeld zum Bearbeiten des Dateinamens anzeigen"
   },
@@ -27,5 +24,20 @@
   "unixTimestamp": { "message": "Unformatierter Zeitstempel" },
   "custom": { "message": "Benutzerdefiniert" },
   "save": { "message": "Speichern" },
-  "showAllFiles": { "message": "Alle Dateien anzeigen" }
+  "showAllFiles": { "message": "Alle Dateien anzeigen" },
+  "enableImagePaste": { "message": "Einfügen von Bildern aktivieren" },
+  "enableTextPaste": { "message": "Einfügen von Text aktivieren" },
+  "textExtensionLabel": { "message": "Standard-Dateiendung" },
+  "imageSettings": { "message": "Bilder" },
+  "textSettings": { "message": "Text" },
+  "clearOnPasteImage": {
+    "message": "Zwischenablage nach dem Hochladen des Bildes leeren"
+  },
+  "clearOnPasteText": {
+    "message": "Zwischenablage nach dem Hochladen des Textes leeren"
+  },
+  "themeLabel": { "message": "Thema" },
+  "themeAuto": { "message": "Auto" },
+  "themeLight": { "message": "Hell" },
+  "themeDark": { "message": "Dunkel" }
 }

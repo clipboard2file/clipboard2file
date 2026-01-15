@@ -1,15 +1,12 @@
 {
-  "clearOnPaste": {
-    "message": "Clear clipboard after uploading image"
-  },
   "showFilenameBox": {
-    "message": "Show text box for editing filename"
+    "message": "Show text box for editing file name"
   },
   "showFormatToggleButton": {
     "message": "Show button for changing image format"
   },
   "defaultFilename": {
-    "message": "Default filename"
+    "message": "Default file name"
   },
   "defaultFileType": {
     "message": "Default image format"
@@ -18,14 +15,25 @@
     "message": "JPG quality"
   },
   "customFilenameLabel": {
-    "message": "Custom filename"
+    "message": "Custom file name"
   },
   "customPlaceholder": {
-    "message": "Type custom filename here"
+    "message": "Type custom file name here"
   },
   "formattedTime": { "message": "Formatted time" },
   "unixTimestamp": { "message": "Raw timestamp" },
   "custom": { "message": "Custom" },
   "save": { "message": "Save" },
-  "showAllFiles": { "message": "Show all files" }
+  "showAllFiles": { "message": "Show all files" },
+  "enableImagePaste": { "message": "Enable Image pasting" },
+  "enableTextPaste": { "message": "Enable Text pasting" },
+  "textExtensionLabel": { "message": "Default file extension" },
+  "imageSettings": { "message": "Images" },
+  "textSettings": { "message": "Text" },
+  "clearOnPasteImage": { "message": "Clear clipboard after uploading image" },
+  "clearOnPasteText": { "message": "Clear clipboard after uploading text" },
+  "themeLabel": { "message": "Theme" },
+  "themeAuto": { "message": "Auto" },
+  "themeLight": { "message": "Light" },
+  "themeDark": { "message": "Dark" }
 }

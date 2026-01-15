@@ -8,7 +8,8 @@
     "549": "./icons/clipboard2file.svg"
   },
   "options_ui": {
-    "page": "./settings/options.html"
+    "page": "./settings/options.html",
+    "browser_style": false
   },
   "browser_specific_settings": {
     "gecko": {

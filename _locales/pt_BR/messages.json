@@ -1,7 +1,4 @@
 {
-  "clearOnPaste": {
-    "message": "Limpar área de transferência após o envio da imagem"
-  },
   "showFilenameBox": {
     "message": "Mostrar caixa de texto para editar o nome do arquivo"
   },
@@ -24,8 +21,23 @@
     "message": "Digite o nome de arquivo personalizado aqui"
   },
   "formattedTime": { "message": "Tempo formatado" },
-  "unixTimestamp": { "message": "Carimbo de tempo cru" },
+  "unixTimestamp": { "message": "Carimbo de tempo bruto" },
   "custom": { "message": "Personalizado" },
   "save": { "message": "Salvar" },
-  "showAllFiles": { "message": "Mostrar todos os arquivos" }
+  "showAllFiles": { "message": "Mostrar todos os arquivos" },
+  "enableImagePaste": { "message": "Habilitar colagem de imagens" },
+  "enableTextPaste": { "message": "Habilitar colagem de texto" },
+  "textExtensionLabel": { "message": "Extensão de arquivo padrão" },
+  "imageSettings": { "message": "Imagens" },
+  "textSettings": { "message": "Texto" },
+  "clearOnPasteImage": {
+    "message": "Limpar área de transferência após o envio da imagem"
+  },
+  "clearOnPasteText": {
+    "message": "Limpar área de transferência após o envio de texto"
+  },
+  "themeLabel": { "message": "Tema" },
+  "themeAuto": { "message": "Automático" },
+  "themeLight": { "message": "Claro" },
+  "themeDark": { "message": "Escuro" }
 }

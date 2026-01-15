@@ -5,10 +5,9 @@ browser.runtime.connect({ name: "popup" });
 const POPUP_WIDTH_PX = 300;
 const POPUP_HEIGHT_PX = 250;
 const SCREEN_MARGIN_PX = 8;
-const ANIMATION_DURATION_MS = 200;
+const ANIMATION_DURATION_MS = 230;
 
 const params = new URLSearchParams(window.location.search);
-
 const parentVisualViewport = {
   scale: parseFloat(params.get("scale")),
   offsetLeft: parseFloat(params.get("offsetLeft")),
@@ -41,95 +40,162 @@ const [init, settings] = await Promise.all([
 ]);
 
 const {
-  clipboardImage,
+  clipboardBlob,
+  clipboardType,
   positionData,
   backgroundDevicePixelRatio,
   backgroundPrefersDark,
   inputAttributes,
   isTopFrame,
 } = init;
+
 const popup = document.getElementById("popup");
 const filenameContainer = document.getElementById("filenameContainer");
 const filenameDiv = document.getElementById("basename");
+const filenameExtDiv = document.getElementById("ext");
 const formatToggle = document.getElementById("formatToggle");
 const floatingFormatToggle = document.getElementById("floatingFormatToggle");
 const preview = document.getElementById("preview");
 const previewImage = document.getElementById("previewImage");
+const textPreview = document.getElementById("textPreview");
 const showAllFiles = document.getElementById("showAllFiles");
 
+const originalBlob = clipboardBlob;
+const jpegQuality = settings.jpegQuality / 100;
+const textExtension = settings.textExtension || "txt";
+
+let currentBlob = clipboardBlob;
+let currentFormat = settings.defaultFileType;
 let lastSelection = null;
 
-const originalBlob = clipboardImage;
-let currentBlob = clipboardImage;
-let currentFormat = settings.defaultFileType;
-const jpegQuality = settings.jpegQuality / 100;
+const computeInitialBaseName = () => {
+  const isText = clipboardType === "text";
+  const mode = isText
+    ? settings.defaultFilenameText
+    : settings.defaultFilenameImage;
 
-const updateDPR = () => {
-  const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
-  document.body.style.setProperty("--devicePixelRatio", dpr);
+  if (mode === "unix") {
+    return String(Temporal.Now.instant().epochMilliseconds);
+  }
+
+  if (mode === "custom") {
+    const customValue = isText
+      ? settings.customFilenameText
+      : settings.customFilenameImage;
+    return customValue || (isText ? "text" : "image");
+  }
+
+  return getFormattedDate(isText ? "txt-" : "img-");
+};
+
+const defaultFilenameBase = computeInitialBaseName();
+
+const computeFinalFilename = () => {
+  const input = filenameDiv.textContent.trim();
+  const baseName = input.length > 0 ? input : defaultFilenameBase;
+
+  if (clipboardType === "text") {
+    return input.length === 0 ? `${baseName}.${textExtension}` : baseName;
+  }
+
+  const ext = currentFormat === "jpeg" ? ".jpg" : ".png";
+  return baseName.replace(/\.(png|jpg|jpeg)$/i, "") + ext;
+};
+
+const updatePreview = () => {
+  if (clipboardType === "text") {
+    previewImage.hidden = true;
+    textPreview.hidden = false;
+
+    currentBlob.text().then(text => {
+      textPreview.textContent = text;
+    });
+
+    if (filenameExtDiv) filenameExtDiv.textContent = "";
+    return;
+  }
+
+  if (clipboardType === "image") {
+    textPreview.hidden = true;
+    previewImage.hidden = false;
+
+    if (previewImage.src) {
+      URL.revokeObjectURL(previewImage.src);
+    }
+    previewImage.src = URL.createObjectURL(currentBlob);
+  }
+};
+
+const setFileType = async (type, saveToStorage = false) => {
+  if (clipboardType === "text") {
+    updatePreview();
+    return;
+  }
+
+  if (clipboardType === "image") {
+    popup.dataset.format = type;
+    currentFormat = type;
+
+    if (type === "jpeg") {
+      currentBlob = await convertToJpeg(originalBlob, jpegQuality);
+    } else {
+      currentBlob = originalBlob;
+    }
+
+    updatePreview();
+
+    if (saveToStorage) {
+      browser.storage.local.set({ defaultFileType: type });
+    }
+  }
 };
 
 const updateEmptyState = () => {
   filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
 };
 
-const restoreSelection = () => {
-  if (!lastSelection) return;
+const selectBaseName = element => {
+  if (!element.firstChild) return;
+  const range = document.createRange();
 
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.setBaseAndExtent(
-    lastSelection.anchorNode,
-    lastSelection.anchorOffset,
-    lastSelection.focusNode,
-    lastSelection.focusOffset
-  );
-};
-
-const updatePreview = () => {
-  if (previewImage.src) {
-    URL.revokeObjectURL(previewImage.src);
-  }
-  previewImage.src = URL.createObjectURL(currentBlob);
-};
-
-const setFileType = async (type, saveToStorage = false) => {
-  popup.dataset.format = type;
-
-  if (type === "jpeg") {
-    currentBlob = await convertToJpeg(originalBlob, jpegQuality);
-  } else {
-    currentBlob = originalBlob;
+  if (clipboardType === "text") {
+    const text = element.textContent;
+    const lastDot = text.lastIndexOf(".");
+    if (lastDot > 0 && element.firstChild.nodeType === Node.TEXT_NODE) {
+      range.setStart(element.firstChild, 0);
+      range.setEnd(element.firstChild, lastDot);
+    } else {
+      range.selectNodeContents(element);
+    }
+  } else if (clipboardType === "image") {
+    range.selectNodeContents(element);
   }
 
-  currentFormat = type;
-
-  updatePreview();
-
-  if (saveToStorage) {
-    browser.storage.local.set({ defaultFileType: type });
-  }
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
 };
 
-let defaultFilename;
-if (settings.defaultFilename === "unix") {
-  defaultFilename = String(Temporal.Now.instant().epochMilliseconds);
-} else if (settings.defaultFilename === "custom") {
-  defaultFilename = settings.customFilenameText || "image";
-} else {
-  defaultFilename = generateDefaultFilename();
+if (clipboardType === "text") {
+  const full = `${defaultFilenameBase}.${textExtension}`;
+  filenameDiv.textContent = full;
+  filenameDiv.dataset.placeholder = full;
+} else if (clipboardType === "image") {
+  filenameDiv.textContent = defaultFilenameBase;
+  filenameDiv.dataset.placeholder = defaultFilenameBase;
 }
 
-filenameDiv.textContent = defaultFilename;
-filenameDiv.dataset.placeholder = defaultFilename;
-updateEmptyState();
+const showFilenameBox =
+  clipboardType === "text"
+    ? settings.showFilenameBoxText
+    : settings.showFilenameBoxImage;
 
-if (settings.showFilenameBox) {
+if (showFilenameBox) {
   filenameContainer.hidden = false;
 }
 
-if (settings.showFormatToggleButton) {
-  if (settings.showFilenameBox) {
+if (settings.showFormatToggleButton && clipboardType === "image") {
+  if (showFilenameBox) {
     formatToggle.hidden = false;
   } else {
     floatingFormatToggle.hidden = false;
@@ -138,8 +204,15 @@ if (settings.showFormatToggleButton) {
 
 showAllFiles.textContent = browser.i18n.getMessage("showAllFiles");
 
+filenameDiv.addEventListener("input", updateEmptyState);
+updateEmptyState();
+
 await setFileType(settings.defaultFileType, false);
 
+const updateDPR = () => {
+  const dpr = window.devicePixelRatio / backgroundDevicePixelRatio;
+  document.body.style.setProperty("--devicePixelRatio", dpr);
+};
 updateDPR();
 window.addEventListener("resize", updateDPR);
 
@@ -158,6 +231,21 @@ document.addEventListener("selectionchange", () => {
   }
 });
 
+const restoreSelection = () => {
+  if (!lastSelection) {
+    return;
+  }
+
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.setBaseAndExtent(
+    lastSelection.anchorNode,
+    lastSelection.anchorOffset,
+    lastSelection.focusNode,
+    lastSelection.focusOffset
+  );
+};
+
 window.addEventListener("blur", e => {
   if (e.target === window && document.activeElement === filenameDiv) {
     restoreSelection();
@@ -167,25 +255,23 @@ window.addEventListener("blur", e => {
 filenameDiv.addEventListener("focus", restoreSelection);
 
 filenameContainer.addEventListener("click", e => {
-  if (e.target === formatToggle) {
-    return;
+  if (e.target !== formatToggle) {
+    filenameDiv.focus();
   }
-
-  filenameDiv.focus();
 });
 
-filenameDiv.addEventListener("input", updateEmptyState);
-
-filenameDiv.addEventListener("keydown", e => {
+const handleEnter = e => {
   if (e.key === "Enter") {
     e.preventDefault();
     preview.click();
   }
-});
+};
+
+filenameDiv.addEventListener("keydown", handleEnter);
+textPreview.addEventListener("keydown", handleEnter);
 
 const handleFormatToggle = async e => {
   e.preventDefault();
-
   if (
     e.button === 2 ||
     (e.type === "click" && e.mozInputSource === MouseEvent.MOZ_SOURCE_MOUSE)
@@ -197,22 +283,15 @@ const handleFormatToggle = async e => {
   await setFileType(newType, true);
 };
 
-formatToggle.addEventListener("mousedown", handleFormatToggle);
-floatingFormatToggle.addEventListener("mousedown", handleFormatToggle);
-formatToggle.addEventListener("click", handleFormatToggle);
-floatingFormatToggle.addEventListener("click", handleFormatToggle);
+if (clipboardType === "image") {
+  formatToggle.addEventListener("mousedown", handleFormatToggle);
+  floatingFormatToggle.addEventListener("mousedown", handleFormatToggle);
+  formatToggle.addEventListener("click", handleFormatToggle);
+  floatingFormatToggle.addEventListener("click", handleFormatToggle);
+}
 
 preview.addEventListener("click", () => {
-  let base = filenameDiv.textContent.trim();
-  if (base.length === 0) {
-    base = defaultFilename;
-  }
-
-  base = base.replace(/\.(png|jpg|jpeg)$/i, "");
-
-  const ext = currentFormat === "png" ? ".png" : ".jpg";
-  const filename = base + ext;
-
+  const filename = computeFinalFilename();
   const file = new File([currentBlob], filename, { type: currentBlob.type });
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(file);
@@ -220,13 +299,12 @@ preview.addEventListener("click", () => {
   browser.runtime.sendMessage({
     type: "files",
     files: dataTransfer.files,
-    isClipboardImage: true,
+    isFromClipboard: true,
   });
 });
 
 showAllFiles.addEventListener("click", () => {
   popup.style.opacity = "0";
-
   if (isTopFrame) {
     browser.runtime.sendMessage({ type: "showPicker" });
   } else {
@@ -234,12 +312,15 @@ showAllFiles.addEventListener("click", () => {
   }
 });
 
-if (settings.showFilenameBox) {
+if (showFilenameBox) {
   filenameDiv.focus();
   selectBaseName(filenameDiv);
 }
 
-popup.toggleAttribute("prefersDark", backgroundPrefersDark);
+const useDark =
+  settings.theme === "auto" ? backgroundPrefersDark : settings.theme === "dark";
+
+popup.toggleAttribute("prefersDark", useDark);
 
 const popupWidth =
   (POPUP_WIDTH_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
@@ -264,10 +345,12 @@ popup.style.left = `${(popupX / window.visualViewport.width) * 100}%`;
 popup.style.top = `${(popupY / window.visualViewport.height) * 100}%`;
 popup.style.zoom = scale;
 
-try {
-  await previewImage.decode();
-} catch (error) {
-  console.error(error);
+if (clipboardType === "image") {
+  try {
+    await previewImage.decode();
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 const { matches: prefersReducedMotion } = window.matchMedia(
@@ -279,14 +362,8 @@ if (prefersReducedMotion) {
 } else {
   let animation = popup.animate(
     [
-      {
-        transform: "skew(2deg, 1deg) scale(0.95)",
-        opacity: "0",
-      },
-      {
-        opacity: "1",
-        transform: "none",
-      },
+      { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
+      { opacity: "1", transform: "none" },
     ],
     {
       duration: ANIMATION_DURATION_MS,
@@ -297,6 +374,16 @@ if (prefersReducedMotion) {
   await animation.finished;
   animation.commitStyles();
   animation.cancel();
+}
+
+function getFormattedDate(prefix) {
+  const now = Temporal.Now.plainDateTimeISO();
+  const p = n => String(n).padStart(2, "0");
+  return (
+    prefix +
+    `${now.year}-${p(now.month)}-${p(now.day)}-` +
+    `${p(now.hour)}-${p(now.minute)}-${p(now.second)}`
+  );
 }
 
 async function convertToJpeg(blob, quality) {
@@ -326,15 +413,6 @@ function showPicker(inputAttributes) {
   });
 
   decoyInput.showPicker();
-}
-
-function selectBaseName(element) {
-  if (!element.firstChild) return;
-  const range = document.createRange();
-  range.selectNodeContents(element);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
 }
 
 function clamp(val, min, max) {
@@ -620,16 +698,6 @@ async function calculatePopupPosition(
     popupX: clampedParentVisualX + parentVisualViewport.offsetLeft,
     popupY: clampedParentVisualY + parentVisualViewport.offsetTop,
   };
-}
-
-function generateDefaultFilename() {
-  const now = Temporal.Now.plainDateTimeISO();
-  const pad = n => String(n).padStart(2, "0");
-  return (
-    `img-` +
-    `${now.year}-${pad(now.month)}-${pad(now.day)}-` +
-    `${pad(now.hour)}-${pad(now.minute)}-${pad(now.second)}`
-  );
 }
 
 function waitforStableLayout() {
