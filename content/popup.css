@@ -8,9 +8,9 @@
   --popupShadow: light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.2));
   --toggleText: light-dark(#15141a, #ffffff);
   --showAllFiles: light-dark(#0062f9, #00ddff);
+  --showAllFilesHover: color-mix(in srgb, black 10%, var(--showAllFiles));
+  --showAllFilesActive: color-mix(in srgb, black 20%, var(--showAllFiles));
   --showAllFilesText: light-dark(#ffffff, #1c1b22);
-  --showAllFilesHover: light-dark(#0052cc, #80ebff);
-  --showAllFilesActive: light-dark(#0042a9, #aaf2ff);
   --textPreviewFont: light-dark(#15141a, #fbfbfe);
 }
 
@@ -63,7 +63,7 @@ button {
   }
 
   &[data-format="png"] {
-    #ext::after {
+    #basename::after {
       content: ".png";
     }
 
@@ -74,7 +74,7 @@ button {
   }
 
   &[data-format="jpeg"] {
-    #ext::after {
+    #basename::after {
       content: ".jpg";
     }
 
@@ -155,48 +155,42 @@ button {
     flex: 1 1 auto;
     align-items: center;
     min-width: 0;
-    overflow: hidden;
 
     #basename {
-      display: inline-flex;
-      flex: 0 1 auto;
-      overflow: hidden;
+      display: inline-block;
+      flex: 1 1 auto;
+      overflow: scroll;
+      scrollbar-width: none;
+      overscroll-behavior: none;
       color: var(--filenameFont);
       font-family: sans-serif;
       font-size: calc(14px / var(--devicePixelRatio));
       white-space: nowrap;
       outline: none;
 
+      &::after {
+        color: inherit;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
       &:not(:focus)::selection {
         background: transparent;
       }
 
       &.empty {
-        &::after {
+        &::before {
           content: attr(data-placeholder);
-          display: inline-flex;
           color: inherit;
           font-family: inherit;
           opacity: 0.5;
           pointer-events: none;
-          user-select: none;
         }
 
         & > br {
           display: none;
         }
       }
-    }
-
-    #ext {
-      flex: 0 0 auto;
-      color: var(--filenameFont);
-      font-family: sans-serif;
-      font-size: calc(14px / var(--devicePixelRatio));
-      white-space: pre;
-      opacity: 0.5;
-      pointer-events: none;
-      user-select: none;
     }
   }
 }

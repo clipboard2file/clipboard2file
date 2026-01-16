@@ -52,7 +52,6 @@ const {
 const popup = document.getElementById("popup");
 const filenameContainer = document.getElementById("filenameContainer");
 const filenameDiv = document.getElementById("basename");
-const filenameExtDiv = document.getElementById("ext");
 const formatToggle = document.getElementById("formatToggle");
 const floatingFormatToggle = document.getElementById("floatingFormatToggle");
 const preview = document.getElementById("preview");
@@ -62,7 +61,7 @@ const showAllFiles = document.getElementById("showAllFiles");
 
 const originalBlob = clipboardBlob;
 const jpegQuality = settings.jpegQuality / 100;
-const textExtension = settings.textExtension || "txt";
+const textExtension = settings.textExtension;
 
 let currentBlob = clipboardBlob;
 let currentFormat = settings.defaultFileType;
@@ -85,7 +84,7 @@ const computeInitialBaseName = () => {
     return customValue || (isText ? "text" : "image");
   }
 
-  return getFormattedDate(isText ? "txt-" : "img-");
+  return (isText ? "" : "img-") + getFormattedDate();
 };
 
 const defaultFilenameBase = computeInitialBaseName();
@@ -111,7 +110,6 @@ const updatePreview = () => {
       textPreview.textContent = text;
     });
 
-    if (filenameExtDiv) filenameExtDiv.textContent = "";
     return;
   }
 
@@ -317,10 +315,10 @@ if (showFilenameBox) {
   selectBaseName(filenameDiv);
 }
 
-const useDark =
+const prefersDark =
   settings.theme === "auto" ? backgroundPrefersDark : settings.theme === "dark";
 
-popup.toggleAttribute("prefersDark", useDark);
+popup.toggleAttribute("prefersDark", prefersDark);
 
 const popupWidth =
   (POPUP_WIDTH_PX * backgroundDevicePixelRatio) / window.devicePixelRatio;
@@ -376,11 +374,10 @@ if (prefersReducedMotion) {
   animation.cancel();
 }
 
-function getFormattedDate(prefix) {
+function getFormattedDate() {
   const now = Temporal.Now.plainDateTimeISO();
   const p = n => String(n).padStart(2, "0");
   return (
-    prefix +
     `${now.year}-${p(now.month)}-${p(now.day)}-` +
     `${p(now.hour)}-${p(now.minute)}-${p(now.second)}`
   );

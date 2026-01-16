@@ -160,8 +160,8 @@ const overrides = {
       }
 
       if (
-        (!event.composed && this.getRootNode() instanceof ShadowRoot) ||
-        !this.isConnected
+        !this.isConnected ||
+        (!event.composed && this.getRootNode() instanceof ShadowRoot)
       ) {
         handleInputElement(this, event);
         event.defaultPreventedByExtension = true;
@@ -398,8 +398,10 @@ function collectAnchorRects(input, event) {
       target = target.parentElement;
     }
 
-    if (target.control) {
-      const controlRect = target.control.getBoundingClientRect();
+    let label = target.closest("label");
+
+    if (label?.control) {
+      const controlRect = label.control.getBoundingClientRect();
       positionData.event.controlRect = {
         left: controlRect.left,
         top: controlRect.top,
