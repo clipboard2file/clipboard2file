@@ -1,17 +1,25 @@
 :root {
-  --filenameFont: light-dark(#15141a, #fbfbfe);
-  --filenameBackground: light-dark(#f0f0f4, #1c1b22);
-  --filenameBorder: transparent;
-  --filenameFocus: #3584e4;
-  --popupBg: light-dark(#ffffff, #42414d);
-  --popupBorder: light-dark(#cfcfd8, #52525e);
-  --popupShadow: light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.2));
-  --toggleText: light-dark(#15141a, #ffffff);
-  --showAllFiles: light-dark(#0062f9, #00ddff);
-  --showAllFilesHover: color-mix(in srgb, black 10%, var(--showAllFiles));
-  --showAllFilesActive: color-mix(in srgb, black 20%, var(--showAllFiles));
-  --showAllFilesText: light-dark(#ffffff, #1c1b22);
-  --textPreviewFont: light-dark(#15141a, #fbfbfe);
+  --popup-bg: light-dark(#ffffff, #42414d);
+  --popup-border: light-dark(#cfcfd8, #52525e);
+  --popup-shadow: light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.3));
+
+  --filename-text: light-dark(#15141a, #fbfbfe);
+  --filename-bg: light-dark(#f0f0f4, #1c1b22);
+  --filename-focus-ring: #0061e0;
+
+  --preview-bg: light-dark(rgba(0, 0, 0, 0.05), transparent);
+  --preview-text-bg: light-dark(transparent, #2b2a33);
+  --preview-text-color: light-dark(#15141a, #fbfbfe);
+  --preview-focus-ring: light-dark(#0061e0, #00ddff);
+
+  --toggle-text: light-dark(#15141a, #ffffff);
+  --toggle-bg: light-dark(rgba(21, 20, 26, 0.07), #3c3c3c);
+  --toggle-bg-hover: light-dark(rgba(21, 20, 26, 0.14), #5a5a5a);
+
+  --button-bg: light-dark(#0061e0, #00ddff);
+  --button-hover: color-mix(in srgb, black 10%, var(--button-bg));
+  --button-active: color-mix(in srgb, black 20%, var(--button-bg));
+  --button-text: light-dark(#ffffff, #1c1b22);
 }
 
 * {
@@ -25,6 +33,7 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  font: menu;
   background: transparent;
   text-rendering: optimizeLegibility;
 
@@ -35,6 +44,7 @@ body {
 
 button {
   padding-block: 0;
+  font: inherit;
   border: none;
   border-radius: calc(4px / var(--devicePixelRatio));
   outline-offset: calc(2px / var(--devicePixelRatio));
@@ -47,15 +57,12 @@ button {
   width: calc(300px / var(--devicePixelRatio));
   height: calc(250px / var(--devicePixelRatio));
   padding: calc(8px / var(--devicePixelRatio));
-
-  background-color: var(--popupBg);
-  border: calc(1px / var(--devicePixelRatio)) var(--popupBorder) solid;
+  opacity: 0;
+  background-color: var(--popup-bg);
+  border: calc(1px / var(--devicePixelRatio)) var(--popup-border) solid;
   border-radius: calc(8px / var(--devicePixelRatio));
   box-shadow: 0 calc(4px / var(--devicePixelRatio))
-    calc(16px / var(--devicePixelRatio)) 0 var(--popupShadow);
-
-  opacity: 0;
-
+    calc(16px / var(--devicePixelRatio)) 0 var(--popup-shadow);
   color-scheme: light;
 
   &[prefersDark] {
@@ -87,15 +94,16 @@ button {
 
 #preview {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   padding: 0;
   overflow: hidden;
-  background-color: light-dark(rgba(0, 0, 0, 0.05), transparent);
+  background-color: var(--preview-bg);
+  border-radius: calc(4px / var(--devicePixelRatio));
 
-  img {
+  #imagePreview {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -106,22 +114,22 @@ button {
     height: 100%;
     padding: calc(8px / var(--devicePixelRatio));
     overflow: auto;
-    font-family: sans-serif;
     font-size: calc(12px / var(--devicePixelRatio));
-    color: var(--textPreviewFont);
+    color: var(--preview-text-color);
     text-align: left;
     white-space: pre;
     word-break: normal;
     user-select: none;
-    background-color: light-dark(transparent, #2b2a33);
+    background-color: var(--preview-text-bg);
   }
 
   &:is(:hover, :focus-within) {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--preview-focus-ring);
   }
 
   &:focus {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFilesHover);
+    outline: calc(2px / var(--devicePixelRatio)) solid
+      color-mix(in srgb, black 10%, var(--preview-focus-ring));
   }
 }
 
@@ -134,19 +142,19 @@ button {
   padding-block: calc(6px / var(--devicePixelRatio));
   padding-inline: calc(8px / var(--devicePixelRatio));
   overflow: hidden;
-
-  background-color: var(--filenameBackground);
-  border: calc(1px / var(--devicePixelRatio)) solid var(--filenameBorder);
-  border-radius: calc(4px / var(--devicePixelRatio));
   cursor: text;
+  background-color: var(--filename-bg);
+  border: calc(1px / var(--devicePixelRatio)) solid transparent;
+  border-radius: calc(4px / var(--devicePixelRatio));
 
   &[hidden] {
     display: none !important;
   }
 
   &:has(#filename:focus-within) {
-    border-color: var(--filenameFocus);
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--filenameFocus);
+    border-color: var(--filename-focus-ring);
+    outline: calc(2px / var(--devicePixelRatio)) solid
+      var(--filename-focus-ring);
     outline-offset: calc(-1px / var(--devicePixelRatio));
   }
 
@@ -160,13 +168,13 @@ button {
       display: inline-block;
       flex: 1 1 auto;
       overflow: scroll;
-      scrollbar-width: none;
-      overscroll-behavior: none;
-      color: var(--filenameFont);
-      font-family: sans-serif;
+      font-family: inherit;
       font-size: calc(14px / var(--devicePixelRatio));
       white-space: nowrap;
+      color: var(--filename-text);
       outline: none;
+      scrollbar-width: none;
+      overscroll-behavior: none;
 
       &::after {
         color: inherit;
@@ -202,10 +210,9 @@ button {
   justify-content: center;
   padding-block: calc(4px / var(--devicePixelRatio));
   padding-inline: calc(8px / var(--devicePixelRatio));
-
-  color: var(--toggleText);
-  font: menu;
-  font-weight: 700;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--toggle-text);
   text-transform: uppercase;
   box-shadow: 0 0 calc(4px / var(--devicePixelRatio))
     light-dark(transparent, rgba(0, 0, 0, 0.5));
@@ -219,20 +226,20 @@ button {
   }
 
   &:focus-visible {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--button-bg);
     outline-offset: 0px;
   }
 }
 
 #formatToggle {
   margin-inline-start: calc(6px / var(--devicePixelRatio));
-  font-size: calc(13px / var(--devicePixelRatio));
+  font-size: calc(12px / var(--devicePixelRatio));
   line-height: calc(14px / var(--devicePixelRatio));
+  background-color: var(--toggle-bg);
   border-radius: calc(4px / var(--devicePixelRatio));
-  background-color: light-dark(rgba(21, 20, 26, 0.07), #3c3c3c);
 
   &:hover {
-    background-color: light-dark(rgba(21, 20, 26, 0.14), #5a5a5a);
+    background-color: var(--toggle-bg-hover);
   }
 }
 
@@ -240,13 +247,12 @@ button {
   position: absolute;
   top: calc(12px / var(--devicePixelRatio));
   right: calc(12px / var(--devicePixelRatio));
-
-  font-size: calc(15px / var(--devicePixelRatio));
+  font-size: calc(13px / var(--devicePixelRatio));
   line-height: calc(20px / var(--devicePixelRatio));
-
   background-color: light-dark(#ffffff, #1c1b22);
   border: calc(1px / var(--devicePixelRatio)) solid
-    light-dark(var(--popupBorder), #1c1b22);
+    light-dark(var(--popup-border), #1c1b22);
+  border-radius: calc(4px / var(--devicePixelRatio));
 
   &::after {
     content: "";
@@ -256,31 +262,29 @@ button {
 
   &:hover {
     background-color: light-dark(#e6e6e6, #2b2a33);
-    border-color: light-dark(var(--popupBorder), #2b2a33);
+    border-color: light-dark(var(--popup-border), #2b2a33);
   }
 }
 
 #showAllFiles {
   min-height: calc(32px / var(--devicePixelRatio));
   margin-top: calc(10px / var(--devicePixelRatio));
-
-  color: var(--showAllFilesText);
-  font: menu;
+  font-family: inherit;
   font-size: calc(14px / var(--devicePixelRatio));
   font-weight: 600;
-
-  background-color: var(--showAllFiles);
+  color: var(--button-text);
+  background-color: var(--button-bg);
 
   &:hover {
-    background-color: var(--showAllFilesHover);
+    background-color: var(--button-hover);
   }
 
   &:active {
-    background-color: var(--showAllFilesActive);
+    background-color: var(--button-active);
   }
 
   &:focus-visible {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--showAllFiles);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--button-bg);
     outline-offset: calc(2px / var(--devicePixelRatio));
   }
 }

@@ -3,8 +3,13 @@ function handleInputElement(input, event) {
 
   const listener = message => {
     if (message.type === "showPicker") {
-      input.showPicker();
-      port.disconnect();
+      try {
+        input.showPicker();
+        port.postMessage({ type: "showPickerSucceeded", success: true });
+        port.disconnect();
+      } catch (error) {
+        port.postMessage({ type: "showPickerSucceeded", success: false });
+      }
       return;
     }
 
@@ -396,18 +401,6 @@ function collectAnchorRects(input, event) {
   if (target) {
     if (!(target instanceof Element) && target.parentElement) {
       target = target.parentElement;
-    }
-
-    let label = target.closest("label");
-
-    if (label?.control) {
-      const controlRect = label.control.getBoundingClientRect();
-      positionData.event.controlRect = {
-        left: controlRect.left,
-        top: controlRect.top,
-        width: controlRect.width,
-        height: controlRect.height,
-      };
     }
 
     if (target.openOrClosedShadowRoot && event.originalTarget) {

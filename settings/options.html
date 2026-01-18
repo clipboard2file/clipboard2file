@@ -1,63 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <title>Settings - Clipboard2File</title>
     <meta charset="utf-8" />
     <meta name="color-scheme" content="light dark" />
-    <link rel="icon" type="image/x-icon" href="../icons/clipboard2file.svg" />
     <style>
       :root {
-        --color-bg-page: light-dark(#f2f4f6, #1a1a1a);
-        --color-bg-surface: light-dark(#ffffff, #252525);
-        --color-bg-surface-header: light-dark(#f9fafb, #2d2d2d);
-        --color-bg-input: light-dark(#ffffff, #333);
-        --color-bg-switch-track: light-dark(#e5e7eb, #555);
+        --page-bg: light-dark(#f0f0f4, #1c1b22);
+        --box-bg: light-dark(#ffffff, #23222b);
+        --box-border: light-dark(#cfcfd8, #52525e);
+        --text-main: light-dark(#15141a, #fbfbfe);
+        --text-muted: light-dark(#5b5b66, #bfbfcb);
 
-        --color-text-primary: light-dark(#1a1a1a, #f0f0f0);
-        --color-text-secondary: light-dark(#666, #888);
+        --button-bg: light-dark(
+          rgba(207, 207, 216, 0.33),
+          rgba(255, 255, 255, 0.1)
+        );
+        --button-bg-hover: light-dark(
+          rgba(207, 207, 216, 0.66),
+          rgba(255, 255, 255, 0.15)
+        );
 
-        --color-accent: light-dark(#0062f9, #00ddff);
-        --color-border: light-dark(#d1d5db, #333);
+        --accent-color: light-dark(#0062f9, #00cadb);
+        --accent-color-hover: light-dark(#0053cb, #62dce9);
+        --accent-text-color: light-dark(#ffffff, #2b2a33);
 
-        --color-btn-bg: var(--color-accent);
-        --color-btn-text: light-dark(#ffffff, #000000);
-        --color-btn-disabled-bg: light-dark(#e5e7eb, #555);
-        --color-btn-disabled-text: light-dark(#9ca3af, #aaa);
+        --input-bg: light-dark(#ffffff, rgba(255, 255, 255, 0.1));
+        --input-border: light-dark(#cfcfd8, transparent);
+
+        --focus-outline: 2px solid var(--accent-color);
       }
 
       * {
         box-sizing: border-box;
       }
 
-      html {
-        background-color: var(--color-bg-page);
-      }
-
       body {
-        display: grid;
-        grid-template-rows: auto 1fr;
-        gap: 20px;
-        max-inline-size: 650px;
-        margin-inline: auto;
-        padding: 20px 35px;
-        margin-block: 0;
-        min-block-size: 100%;
-        color: var(--color-text-primary);
-        font-family: system-ui;
-        user-select: none;
-      }
-
-      header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-      }
-
-      h1 {
+        max-width: 650px;
         margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
+        margin-inline: auto;
+        padding: 20px;
+        font-family: system-ui;
+        font-size: 15px;
+        color: var(--text-main);
+        user-select: none;
+        background-color: transparent;
+        accent-color: var(--accent-color);
       }
 
       main {
@@ -67,42 +55,35 @@
       }
 
       .settings-group {
-        background-color: var(--color-bg-surface);
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
-        box-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.1), transparent);
-
         overflow: hidden;
+        background-color: var(--box-bg);
+        border: 1px solid var(--box-border);
+        border-radius: 8px;
 
         .settings-group-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-block: 0;
-          padding-inline: 0 16px;
-          background-color: var(--color-bg-surface-header);
-          border-block-end: 1px solid var(--color-border);
+          min-height: 48px;
+          padding: 12px 16px;
+          border-bottom: 1px solid var(--box-border);
         }
 
         .settings-group-title {
-          flex-grow: 1;
-          display: block;
           margin: 0;
-          padding-block: 10px;
-          padding-inline: 16px 0;
+          font-size: 16px;
           font-weight: 600;
-          font-size: 1.05rem;
         }
 
         .settings-group-content {
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          padding: 16px;
-          transition: opacity 0.1s ease;
+          gap: 16px;
+          padding: 16px 0;
 
           &[inert] {
             opacity: 0.5;
+            pointer-events: none;
           }
         }
       }
@@ -111,6 +92,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+        padding: 0 16px;
 
         &[hidden] {
           display: none;
@@ -119,196 +101,188 @@
         &.inline-layout {
           flex-direction: row;
           align-items: center;
-          gap: 15px;
-
-          .setting-label {
-            flex-grow: 1;
-          }
-
-          select {
-            inline-size: auto;
-            min-inline-size: 150px;
-          }
+          justify-content: space-between;
+          gap: 16px;
         }
       }
 
       .setting-label {
+        flex: 1;
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-size: 15px;
-        font-weight: 400;
+        gap: 12px;
       }
 
-      :is(select, .setting-text-input-wrap input[type="text"]) {
-        font-size: 15px;
-        background-color: var(--color-bg-input);
-        color: var(--color-text-primary);
-        border: 1px solid var(--color-border);
-        border-radius: 4px;
+      .setting-checkbox {
+        width: 16px;
+        height: 16px;
+        margin: 1px 0 0 0;
       }
 
       select {
-        inline-size: 100%;
-        min-block-size: 32px;
-        padding-block: 0.45px;
-        padding-inline: 1em;
+        appearance: auto;
+        min-width: 160px;
+        min-height: 32px;
+        margin: 0;
+        padding: 4px 14px;
+        font-family: inherit;
+        font-size: inherit;
         font-weight: 600;
+        color: inherit;
+        background-color: var(--button-bg);
+        border: 1px solid transparent;
+        border-radius: 8px;
 
-        &:focus {
-          border-color: transparent;
-          outline: 2px solid var(--color-accent);
+        option {
+          font-weight: normal;
+          color: var(--text-main);
+          background-color: var(--box-bg);
+        }
+
+        &:hover:not(:disabled) {
+          background-color: var(--button-bg-hover);
+        }
+
+        &:focus-visible {
+          outline: var(--focus-outline);
+          outline-offset: 2px;
         }
       }
 
       .setting-composite-input {
         display: flex;
-        align-items: stretch;
+        width: 100%;
+        gap: 8px;
       }
 
       .setting-text-input-wrap {
         flex: 1;
         display: flex;
         align-items: center;
-        padding-inline: 12px;
-        background-color: var(--color-bg-input);
-        border: 1px solid var(--color-border);
-        border-radius: 4px;
+        height: 32px;
+        padding: 0 12px;
+        background-color: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
 
         &:focus-within {
           border-color: transparent;
-          outline: 2px solid var(--color-accent);
+          outline: var(--focus-outline);
+          outline-offset: -1px;
         }
 
-        input[type="text"] {
-          flex-grow: 1;
-          padding-block: 8px;
+        input {
+          width: 100%;
+          padding: 0;
+          font: inherit;
+          color: inherit;
           background: transparent;
           border: none;
           outline: none;
         }
 
         .file-extension {
-          padding-inline-start: 2px;
-          font-size: 0.9rem;
-          color: var(--color-text-secondary);
-          white-space: nowrap;
+          padding-left: 4px;
+          color: var(--text-muted);
+          user-select: none;
         }
-      }
-
-      .setting-range-header {
-        display: flex;
-        justify-content: space-between;
-
-        .setting-label {
-          flex-grow: 1;
-        }
-      }
-
-      .setting-range-controls {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-
-        input[type="range"] {
-          flex-grow: 1;
-          accent-color: var(--color-accent);
-        }
-      }
-
-      .setting-range-value {
-        min-inline-size: 3ch;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-        text-align: end;
-        color: var(--color-accent);
-      }
-
-      .setting-checkbox {
-        width: 15px;
-        height: 15px;
-        margin: 0;
-        accent-color: var(--color-accent);
       }
 
       .setting-section-toggle {
         appearance: none;
         position: relative;
         flex-shrink: 0;
-        inline-size: 44px;
-        block-size: 24px;
+        width: 32px;
+        height: 16px;
         margin: 0;
-        background-color: var(--color-bg-switch-track);
-        border-radius: 24px;
-        transition: background-color 0.1s;
+        background-color: var(--button-bg);
+        border: 1px solid light-dark(#92929d, #8f8f9d);
+        border-radius: 16px;
+        transition:
+          background-color 0.1s,
+          border-color 0.1s;
 
         &::after {
           content: "";
           position: absolute;
-          inset-block-start: 3px;
-          inset-inline-start: 3px;
-          inline-size: 18px;
-          block-size: 18px;
-          background-color: white;
+          top: 1px;
+          left: 1px;
+          width: 12px;
+          height: 12px;
+          background-color: light-dark(#92929d, #8f8f9d);
           border-radius: 50%;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-          transition: transform 0.1s;
+          transition:
+            left 0.1s,
+            background-color 0.1s;
+        }
+
+        &:hover {
+          background-color: var(--button-bg-hover);
         }
 
         &:checked {
-          background-color: var(--color-accent);
+          background-color: var(--accent-color);
+          border-color: transparent;
+
+          &:hover {
+            background-color: var(--accent-color-hover);
+          }
 
           &::after {
-            transform: translateX(20px);
+            left: 17px;
+            background-color: var(--page-bg);
           }
         }
 
         &:focus-visible {
-          outline: 2px solid var(--color-accent);
+          outline: var(--focus-outline);
           outline-offset: 2px;
         }
       }
 
       .setting-save-btn {
-        margin-inline-start: 10px;
-        padding-block: 8px;
-        padding-inline: 16px;
-        font-size: 14px;
-        font-weight: 600;
-        white-space: nowrap;
-        background-color: var(--color-btn-bg);
-        color: var(--color-btn-text);
+        appearance: none;
+        height: 32px;
+        margin: 0;
+        padding: 0 16px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--accent-text-color);
+        background-color: var(--accent-color);
         border: none;
-        border-radius: 4px;
+        border-radius: 8px;
 
-        &:disabled {
-          background-color: var(--color-btn-disabled-bg);
-          color: var(--color-btn-disabled-text);
-          cursor: not-allowed;
-          opacity: 0.7;
+        &:hover:not(:disabled) {
+          background-color: var(--accent-color-hover);
         }
 
-        &:not(:disabled):hover {
-          opacity: 0.9;
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         &:focus-visible {
-          outline: 2px solid var(--color-accent);
+          outline: var(--focus-outline);
           outline-offset: 2px;
+        }
+      }
+
+      .setting-range-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .setting-range-controls {
+        display: flex;
+
+        input[type="range"] {
+          flex: 1;
         }
       }
     </style>
   </head>
   <body>
-    <header>
-      <img
-        aria-hidden="true"
-        src="../icons/clipboard2file.svg"
-        height="40"
-        width="40"
-      />
-      <h1>Clipboard2File Settings</h1>
-    </header>
     <main></main>
     <script src="./options.js" type="module"></script>
   </body>

@@ -49,9 +49,16 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       break;
     }
     case "showPicker": {
-      session.inputPort.postMessage({ type: "showPicker" });
-      cleanupSession(tabId);
-      break;
+      return new Promise(resolve => {
+        const listener = message => {
+          if (message.type === "showPickerSucceeded") {
+            session.inputPort.onMessage.removeListener(listener);
+            resolve(message.success);
+          }
+        };
+        session.inputPort.onMessage.addListener(listener);
+        session.inputPort.postMessage({ type: "showPicker" });
+      });
     }
     case "cancel": {
       session.inputPort.postMessage({ type: "cancel" });

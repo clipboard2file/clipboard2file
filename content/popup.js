@@ -55,7 +55,7 @@ const filenameDiv = document.getElementById("basename");
 const formatToggle = document.getElementById("formatToggle");
 const floatingFormatToggle = document.getElementById("floatingFormatToggle");
 const preview = document.getElementById("preview");
-const previewImage = document.getElementById("previewImage");
+const imagePreview = document.getElementById("imagePreview");
 const textPreview = document.getElementById("textPreview");
 const showAllFiles = document.getElementById("showAllFiles");
 
@@ -103,7 +103,7 @@ const computeFinalFilename = () => {
 
 const updatePreview = () => {
   if (clipboardType === "text") {
-    previewImage.hidden = true;
+    imagePreview.hidden = true;
     textPreview.hidden = false;
 
     currentBlob.text().then(text => {
@@ -115,12 +115,12 @@ const updatePreview = () => {
 
   if (clipboardType === "image") {
     textPreview.hidden = true;
-    previewImage.hidden = false;
+    imagePreview.hidden = false;
 
-    if (previewImage.src) {
-      URL.revokeObjectURL(previewImage.src);
+    if (imagePreview.src) {
+      URL.revokeObjectURL(imagePreview.src);
     }
-    previewImage.src = URL.createObjectURL(currentBlob);
+    imagePreview.src = URL.createObjectURL(currentBlob);
   }
 };
 
@@ -288,27 +288,35 @@ if (clipboardType === "image") {
   floatingFormatToggle.addEventListener("click", handleFormatToggle);
 }
 
-preview.addEventListener("click", () => {
-  const filename = computeFinalFilename();
-  const file = new File([currentBlob], filename, { type: currentBlob.type });
-  const dataTransfer = new DataTransfer();
-  dataTransfer.items.add(file);
+preview.addEventListener(
+  "click",
+  () => {
+    const filename = computeFinalFilename();
+    const file = new File([currentBlob], filename, { type: currentBlob.type });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
 
-  browser.runtime.sendMessage({
-    type: "files",
-    files: dataTransfer.files,
-    isFromClipboard: true,
-  });
-});
+    browser.runtime.sendMessage({
+      type: "files",
+      files: dataTransfer.files,
+      isFromClipboard: true,
+    });
+  },
+  { once: true }
+);
 
-showAllFiles.addEventListener("click", () => {
-  popup.style.opacity = "0";
-  if (isTopFrame) {
-    browser.runtime.sendMessage({ type: "showPicker" });
-  } else {
-    showPicker(inputAttributes);
-  }
-});
+showAllFiles.addEventListener(
+  "click",
+  async () => {
+    popup.style.opacity = "0";
+    const succeeded = await browser.runtime.sendMessage({ type: "showPicker" });
+
+    if (!succeeded) {
+      showPicker(inputAttributes);
+    }
+  },
+  { once: true }
+);
 
 if (showFilenameBox) {
   filenameDiv.focus();
@@ -345,7 +353,7 @@ popup.style.zoom = scale;
 
 if (clipboardType === "image") {
   try {
-    await previewImage.decode();
+    await imagePreview.decode();
   } catch (error) {
     console.error(error);
   }
@@ -495,13 +503,6 @@ function resolveAnchor({ inputRect, win, event, isTopFrame }) {
 
     return isVisible && !isHuge;
   };
-
-  if (event?.controlRect?.width >= 0) {
-    const parentVisualRect = toParentVisualRect(event.controlRect);
-    if (isValidAnchor(parentVisualRect)) {
-      return parentVisualRect;
-    }
-  }
 
   if (event?.targetRect?.width >= 0) {
     const parentVisualRect = toParentVisualRect(event.targetRect);
