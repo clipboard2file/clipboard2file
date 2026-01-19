@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
     <title>Settings - Clipboard2File</title>
     <meta charset="utf-8" />
@@ -7,10 +7,18 @@
     <style>
       :root {
         --page-bg: light-dark(#f0f0f4, #1c1b22);
+
         --box-bg: light-dark(#ffffff, #23222b);
         --box-border: light-dark(#cfcfd8, #52525e);
+
         --text-main: light-dark(#15141a, #fbfbfe);
-        --text-muted: light-dark(#5b5b66, #bfbfcb);
+        --text-secondary: light-dark(#5b5b66, #bfbfcb);
+        --text-on-accent: light-dark(#ffffff, #2b2a33);
+
+        --accent-primary: light-dark(#0062f9, #00cadb);
+        --accent-hover: light-dark(#0053cb, #62dce9);
+
+        --focus-outline: 2px solid var(--accent-primary);
 
         --button-bg: light-dark(
           rgba(207, 207, 216, 0.33),
@@ -21,14 +29,10 @@
           rgba(255, 255, 255, 0.15)
         );
 
-        --accent-color: light-dark(#0062f9, #00cadb);
-        --accent-color-hover: light-dark(#0053cb, #62dce9);
-        --accent-text-color: light-dark(#ffffff, #2b2a33);
-
         --input-bg: light-dark(#ffffff, rgba(255, 255, 255, 0.1));
         --input-border: light-dark(#cfcfd8, transparent);
 
-        --focus-outline: 2px solid var(--accent-color);
+        --toggle-inactive: light-dark(#92929d, #8f8f9d);
       }
 
       * {
@@ -37,15 +41,15 @@
 
       body {
         max-width: 650px;
-        margin: 0;
-        margin-inline: auto;
+        margin: 0 auto;
         padding: 20px;
+
         font-family: system-ui;
-        font-size: 15px;
         color: var(--text-main);
-        user-select: none;
+
         background-color: transparent;
-        accent-color: var(--accent-color);
+        accent-color: var(--accent-primary);
+        user-select: none;
       }
 
       main {
@@ -71,7 +75,7 @@
 
         .settings-group-title {
           margin: 0;
-          font-size: 16px;
+          font-size: 17px;
           font-weight: 600;
         }
 
@@ -93,6 +97,7 @@
         flex-direction: column;
         gap: 8px;
         padding: 0 16px;
+        font-size: 15px;
 
         &[hidden] {
           display: none;
@@ -110,13 +115,13 @@
         flex: 1;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
       }
 
       .setting-checkbox {
         width: 16px;
         height: 16px;
-        margin: 1px 0 0 0;
+        margin: calc((1lh - 16px) / 2) 0 0 0;
       }
 
       select {
@@ -125,10 +130,11 @@
         min-height: 32px;
         margin: 0;
         padding: 4px 14px;
-        font-family: inherit;
-        font-size: inherit;
+
+        font: inherit;
         font-weight: 600;
         color: inherit;
+
         background-color: var(--button-bg);
         border: 1px solid transparent;
         border-radius: 8px;
@@ -161,6 +167,7 @@
         align-items: center;
         height: 32px;
         padding: 0 12px;
+
         background-color: var(--input-bg);
         border: 1px solid var(--input-border);
         border-radius: 8px;
@@ -174,8 +181,10 @@
         input {
           width: 100%;
           padding: 0;
+
           font: inherit;
           color: inherit;
+
           background: transparent;
           border: none;
           outline: none;
@@ -183,7 +192,7 @@
 
         .file-extension {
           padding-left: 4px;
-          color: var(--text-muted);
+          color: var(--text-secondary);
           user-select: none;
         }
       }
@@ -192,11 +201,13 @@
         appearance: none;
         position: relative;
         flex-shrink: 0;
+
         width: 32px;
         height: 16px;
         margin: 0;
+
         background-color: var(--button-bg);
-        border: 1px solid light-dark(#92929d, #8f8f9d);
+        border: 1px solid var(--toggle-inactive);
         border-radius: 16px;
         transition:
           background-color 0.1s,
@@ -207,9 +218,11 @@
           position: absolute;
           top: 1px;
           left: 1px;
+
           width: 12px;
           height: 12px;
-          background-color: light-dark(#92929d, #8f8f9d);
+
+          background-color: var(--toggle-inactive);
           border-radius: 50%;
           transition:
             left 0.1s,
@@ -220,23 +233,23 @@
           background-color: var(--button-bg-hover);
         }
 
-        &:checked {
-          background-color: var(--accent-color);
-          border-color: transparent;
+        &:focus-visible {
+          outline: var(--focus-outline);
+          outline-offset: 2px;
+        }
 
-          &:hover {
-            background-color: var(--accent-color-hover);
-          }
+        &:checked {
+          background-color: var(--accent-primary);
+          border-color: transparent;
 
           &::after {
             left: 17px;
             background-color: var(--page-bg);
           }
-        }
 
-        &:focus-visible {
-          outline: var(--focus-outline);
-          outline-offset: 2px;
+          &:hover {
+            background-color: var(--accent-hover);
+          }
         }
       }
 
@@ -245,15 +258,17 @@
         height: 32px;
         margin: 0;
         padding: 0 16px;
+
         font-size: 15px;
         font-weight: 500;
-        color: var(--accent-text-color);
-        background-color: var(--accent-color);
+        color: var(--text-on-accent);
+
+        background-color: var(--accent-primary);
         border: none;
         border-radius: 8px;
 
         &:hover:not(:disabled) {
-          background-color: var(--accent-color-hover);
+          background-color: var(--accent-hover);
         }
 
         &:disabled {

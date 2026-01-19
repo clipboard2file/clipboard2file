@@ -51,7 +51,7 @@ const {
 
 const popup = document.getElementById("popup");
 const filenameContainer = document.getElementById("filenameContainer");
-const filenameDiv = document.getElementById("basename");
+const filenameInput = document.getElementById("filename");
 const formatToggle = document.getElementById("formatToggle");
 const floatingFormatToggle = document.getElementById("floatingFormatToggle");
 const preview = document.getElementById("preview");
@@ -90,7 +90,7 @@ const computeInitialBaseName = () => {
 const defaultFilenameBase = computeInitialBaseName();
 
 const computeFinalFilename = () => {
-  const input = filenameDiv.textContent.trim();
+  const input = filenameInput.textContent.trim();
   const baseName = input.length > 0 ? input : defaultFilenameBase;
 
   if (clipboardType === "text") {
@@ -149,7 +149,7 @@ const setFileType = async (type, saveToStorage = false) => {
 };
 
 const updateEmptyState = () => {
-  filenameDiv.classList.toggle("empty", filenameDiv.textContent === "");
+  filenameInput.classList.toggle("empty", filenameInput.textContent === "");
 };
 
 const selectBaseName = element => {
@@ -176,11 +176,11 @@ const selectBaseName = element => {
 
 if (clipboardType === "text") {
   const full = `${defaultFilenameBase}.${textExtension}`;
-  filenameDiv.textContent = full;
-  filenameDiv.dataset.placeholder = full;
+  filenameInput.textContent = full;
+  filenameInput.dataset.placeholder = full;
 } else if (clipboardType === "image") {
-  filenameDiv.textContent = defaultFilenameBase;
-  filenameDiv.dataset.placeholder = defaultFilenameBase;
+  filenameInput.textContent = defaultFilenameBase;
+  filenameInput.dataset.placeholder = defaultFilenameBase;
 }
 
 const showFilenameBox =
@@ -202,7 +202,22 @@ if (settings.showFormatToggleButton && clipboardType === "image") {
 
 showAllFiles.textContent = browser.i18n.getMessage("showAllFiles");
 
-filenameDiv.addEventListener("input", updateEmptyState);
+filenameInput.addEventListener("input", updateEmptyState);
+
+filenameInput.addEventListener("beforeinput", event => {
+  const { inputType } = event;
+
+  if (inputType === "insertParagraph" || inputType === "insertLineBreak") {
+    event.preventDefault();
+  }
+});
+
+filenameInput.addEventListener("paste", event => {
+  event.preventDefault();
+  const text = event.clipboardData.getData("text").replace(/[\r\n]+/g, " ");
+  document.execCommand("insertText", false, text);
+});
+
 updateEmptyState();
 
 await setFileType(settings.defaultFileType, false);
@@ -218,7 +233,7 @@ document.addEventListener("selectionchange", () => {
   const selection = window.getSelection();
   if (selection.rangeCount > 0) {
     const range = selection.getRangeAt(0);
-    if (filenameDiv.contains(range.commonAncestorContainer)) {
+    if (filenameInput.contains(range.commonAncestorContainer)) {
       lastSelection = {
         anchorNode: selection.anchorNode,
         anchorOffset: selection.anchorOffset,
@@ -245,16 +260,16 @@ const restoreSelection = () => {
 };
 
 window.addEventListener("blur", e => {
-  if (e.target === window && document.activeElement === filenameDiv) {
+  if (e.target === window && document.activeElement === filenameInput) {
     restoreSelection();
   }
 });
 
-filenameDiv.addEventListener("focus", restoreSelection);
+filenameInput.addEventListener("focus", restoreSelection);
 
 filenameContainer.addEventListener("click", e => {
   if (e.target !== formatToggle) {
-    filenameDiv.focus();
+    filenameInput.focus();
   }
 });
 
@@ -265,7 +280,7 @@ const handleEnter = e => {
   }
 };
 
-filenameDiv.addEventListener("keydown", handleEnter);
+filenameInput.addEventListener("keydown", handleEnter);
 textPreview.addEventListener("keydown", handleEnter);
 
 const handleFormatToggle = async e => {
@@ -319,8 +334,8 @@ showAllFiles.addEventListener(
 );
 
 if (showFilenameBox) {
-  filenameDiv.focus();
-  selectBaseName(filenameDiv);
+  filenameInput.focus();
+  selectBaseName(filenameInput);
 }
 
 const prefersDark =

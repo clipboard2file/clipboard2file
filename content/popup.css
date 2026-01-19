@@ -1,25 +1,33 @@
 :root {
+  --focus-ring: #0061e0;
+  --focus-ring-dark: #00ddff;
+
   --popup-bg: light-dark(#ffffff, #42414d);
   --popup-border: light-dark(#cfcfd8, #52525e);
-  --popup-shadow: light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.3));
-
-  --filename-text: light-dark(#15141a, #fbfbfe);
-  --filename-bg: light-dark(#f0f0f4, #1c1b22);
-  --filename-focus-ring: #0061e0;
+  --popup-shadow: light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.2));
 
   --preview-bg: light-dark(rgba(0, 0, 0, 0.05), transparent);
   --preview-text-bg: light-dark(transparent, #2b2a33);
   --preview-text-color: light-dark(#15141a, #fbfbfe);
-  --preview-focus-ring: light-dark(#0061e0, #00ddff);
+  --preview-focus: light-dark(var(--focus-ring), var(--focus-ring-dark));
+
+  --filename-bg: light-dark(#f0f0f4, #1c1b22);
+  --filename-text: light-dark(#15141a, #fbfbfe);
+  --filename-focus: var(--focus-ring);
 
   --toggle-text: light-dark(#15141a, #ffffff);
   --toggle-bg: light-dark(rgba(21, 20, 26, 0.07), #3c3c3c);
   --toggle-bg-hover: light-dark(rgba(21, 20, 26, 0.14), #5a5a5a);
 
-  --button-bg: light-dark(#0061e0, #00ddff);
-  --button-hover: color-mix(in srgb, black 10%, var(--button-bg));
-  --button-active: color-mix(in srgb, black 20%, var(--button-bg));
+  --floating-toggle-bg: light-dark(#ffffff, #1c1b22);
+  --floating-toggle-border: light-dark(var(--popup-border), #1c1b22);
+  --floating-toggle-bg-hover: light-dark(#e6e6e6, #2b2a33);
+  --floating-toggle-border-hover: light-dark(var(--popup-border), #2b2a33);
+
   --button-text: light-dark(#ffffff, #1c1b22);
+  --button-bg: light-dark(var(--focus-ring), var(--focus-ring-dark));
+  --button-bg-hover: color-mix(in srgb, black 10%, var(--button-bg));
+  --button-bg-active: color-mix(in srgb, black 20%, var(--button-bg));
 }
 
 * {
@@ -57,20 +65,20 @@ button {
   width: calc(300px / var(--devicePixelRatio));
   height: calc(250px / var(--devicePixelRatio));
   padding: calc(8px / var(--devicePixelRatio));
-  opacity: 0;
+  color-scheme: light;
   background-color: var(--popup-bg);
   border: calc(1px / var(--devicePixelRatio)) var(--popup-border) solid;
   border-radius: calc(8px / var(--devicePixelRatio));
   box-shadow: 0 calc(4px / var(--devicePixelRatio))
     calc(16px / var(--devicePixelRatio)) 0 var(--popup-shadow);
-  color-scheme: light;
+  opacity: 0;
 
   &[prefersDark] {
     color-scheme: dark;
   }
 
   &[data-format="png"] {
-    #basename::after {
+    #filename::after {
       content: ".png";
     }
 
@@ -81,7 +89,7 @@ button {
   }
 
   &[data-format="jpeg"] {
-    #basename::after {
+    #filename::after {
       content: ".jpg";
     }
 
@@ -119,17 +127,17 @@ button {
     text-align: left;
     white-space: pre;
     word-break: normal;
-    user-select: none;
     background-color: var(--preview-text-bg);
+    user-select: none;
   }
 
   &:is(:hover, :focus-within) {
-    outline: calc(2px / var(--devicePixelRatio)) solid var(--preview-focus-ring);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--preview-focus);
   }
 
   &:focus {
     outline: calc(2px / var(--devicePixelRatio)) solid
-      color-mix(in srgb, black 10%, var(--preview-focus-ring));
+      color-mix(in srgb, black 10%, var(--preview-focus));
   }
 }
 
@@ -137,10 +145,8 @@ button {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  min-height: calc(24px / var(--devicePixelRatio));
+  min-height: calc(40px / var(--devicePixelRatio));
   margin-bottom: calc(10px / var(--devicePixelRatio));
-  padding-block: calc(6px / var(--devicePixelRatio));
-  padding-inline: calc(8px / var(--devicePixelRatio));
   overflow: hidden;
   cursor: text;
   background-color: var(--filename-bg);
@@ -152,52 +158,47 @@ button {
   }
 
   &:has(#filename:focus-within) {
-    border-color: var(--filename-focus-ring);
-    outline: calc(2px / var(--devicePixelRatio)) solid
-      var(--filename-focus-ring);
+    border-color: var(--filename-focus);
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--filename-focus);
     outline-offset: calc(-1px / var(--devicePixelRatio));
   }
 
   #filename {
-    display: flex;
+    display: inline-block;
     flex: 1 1 auto;
-    align-items: center;
     min-width: 0;
+    padding-block: calc(9px / var(--devicePixelRatio));
+    padding-inline: calc(8px / var(--devicePixelRatio));
+    overflow: scroll;
+    font-family: inherit;
+    font-size: calc(14px / var(--devicePixelRatio));
+    color: var(--filename-text);
+    white-space: pre;
+    outline: none;
+    overscroll-behavior: none;
+    scrollbar-width: none;
 
-    #basename {
-      display: inline-block;
-      flex: 1 1 auto;
-      overflow: scroll;
-      font-family: inherit;
-      font-size: calc(14px / var(--devicePixelRatio));
-      white-space: nowrap;
-      color: var(--filename-text);
-      outline: none;
-      scrollbar-width: none;
-      overscroll-behavior: none;
+    &::after {
+      color: inherit;
+      opacity: 0.5;
+      pointer-events: none;
+    }
 
-      &::after {
+    &:not(:focus)::selection {
+      background: transparent;
+    }
+
+    &.empty {
+      &::before {
+        content: attr(data-placeholder);
         color: inherit;
+        font-family: inherit;
         opacity: 0.5;
         pointer-events: none;
       }
 
-      &:not(:focus)::selection {
-        background: transparent;
-      }
-
-      &.empty {
-        &::before {
-          content: attr(data-placeholder);
-          color: inherit;
-          font-family: inherit;
-          opacity: 0.5;
-          pointer-events: none;
-        }
-
-        & > br {
-          display: none;
-        }
+      & > br {
+        display: none;
       }
     }
   }
@@ -208,6 +209,7 @@ button {
   display: flex;
   flex: 0 0 auto;
   justify-content: center;
+  align-items: center;
   padding-block: calc(4px / var(--devicePixelRatio));
   padding-inline: calc(8px / var(--devicePixelRatio));
   font-family: inherit;
@@ -232,9 +234,11 @@ button {
 }
 
 #formatToggle {
+  min-width: calc(42px / var(--devicePixelRatio));
+  min-height: calc(24px / var(--devicePixelRatio));
   margin-inline-start: calc(6px / var(--devicePixelRatio));
+  margin-inline-end: calc(8px / var(--devicePixelRatio));
   font-size: calc(12px / var(--devicePixelRatio));
-  line-height: calc(14px / var(--devicePixelRatio));
   background-color: var(--toggle-bg);
   border-radius: calc(4px / var(--devicePixelRatio));
 
@@ -247,11 +251,11 @@ button {
   position: absolute;
   top: calc(12px / var(--devicePixelRatio));
   right: calc(12px / var(--devicePixelRatio));
+  min-width: calc(46px / var(--devicePixelRatio));
   font-size: calc(13px / var(--devicePixelRatio));
-  line-height: calc(20px / var(--devicePixelRatio));
-  background-color: light-dark(#ffffff, #1c1b22);
+  background-color: var(--floating-toggle-bg);
   border: calc(1px / var(--devicePixelRatio)) solid
-    light-dark(var(--popup-border), #1c1b22);
+    var(--floating-toggle-border);
   border-radius: calc(4px / var(--devicePixelRatio));
 
   &::after {
@@ -261,8 +265,8 @@ button {
   }
 
   &:hover {
-    background-color: light-dark(#e6e6e6, #2b2a33);
-    border-color: light-dark(var(--popup-border), #2b2a33);
+    background-color: var(--floating-toggle-bg-hover);
+    border-color: var(--floating-toggle-border-hover);
   }
 }
 
@@ -270,17 +274,17 @@ button {
   min-height: calc(32px / var(--devicePixelRatio));
   margin-top: calc(10px / var(--devicePixelRatio));
   font-family: inherit;
-  font-size: calc(14px / var(--devicePixelRatio));
+  font-size: calc(15px / var(--devicePixelRatio));
   font-weight: 600;
   color: var(--button-text);
   background-color: var(--button-bg);
 
   &:hover {
-    background-color: var(--button-hover);
+    background-color: var(--button-bg-hover);
   }
 
   &:active {
-    background-color: var(--button-active);
+    background-color: var(--button-bg-active);
   }
 
   &:focus-visible {

@@ -408,6 +408,7 @@ function collectAnchorRects(input, event) {
     }
 
     const targetRect = target.getBoundingClientRect();
+
     positionData.event.targetRect = {
       left: targetRect.left,
       top: targetRect.top,
