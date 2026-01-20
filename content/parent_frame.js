@@ -41,7 +41,7 @@ browser.runtime.onMessage.addListener(data => {
         params.set("height", window.visualViewport.height);
 
         const popupUrl = browser.runtime.getURL(
-          `content/popup.html?${params.toString()}`
+          `popup/popup.html?${params.toString()}`
         );
 
         iframe.contentWindow.location.replace(popupUrl);
