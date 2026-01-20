@@ -51,7 +51,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
     case "showPicker": {
       return new Promise(resolve => {
         const listener = message => {
-          if (message.type === "showPickerSucceeded") {
+          if (message.type === "showPickerSuccess") {
             session.inputPort.onMessage.removeListener(listener);
             resolve(message.success);
           }
@@ -148,7 +148,7 @@ browser.runtime.onConnect.addListener(port => {
             cssCode: `${tagName},
                       ${tagName}::before,
                       ${tagName}::after {
-                        all: unset !important;
+                        all: revert !important;
                       }`,
           };
 

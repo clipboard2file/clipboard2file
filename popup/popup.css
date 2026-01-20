@@ -62,6 +62,7 @@ button {
   position: fixed;
   display: flex;
   flex-flow: column;
+  gap: calc(10px / var(--devicePixelRatio));
   width: calc(300px / var(--devicePixelRatio));
   height: calc(250px / var(--devicePixelRatio));
   padding: calc(8px / var(--devicePixelRatio));
@@ -71,6 +72,7 @@ button {
   border-radius: calc(8px / var(--devicePixelRatio));
   box-shadow: 0 calc(4px / var(--devicePixelRatio))
     calc(16px / var(--devicePixelRatio)) 0 var(--popup-shadow);
+
   opacity: 0;
 
   &[prefersDark] {
@@ -145,8 +147,7 @@ button {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  min-height: calc(40px / var(--devicePixelRatio));
-  margin-bottom: calc(10px / var(--devicePixelRatio));
+  min-height: calc(38px / var(--devicePixelRatio));
   overflow: hidden;
   cursor: text;
   background-color: var(--filename-bg);
@@ -272,7 +273,6 @@ button {
 
 #showAllFiles {
   min-height: calc(32px / var(--devicePixelRatio));
-  margin-top: calc(10px / var(--devicePixelRatio));
   font-family: inherit;
   font-size: calc(15px / var(--devicePixelRatio));
   font-weight: 600;

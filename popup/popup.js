@@ -6,6 +6,7 @@ const POPUP_WIDTH_PX = 300;
 const POPUP_HEIGHT_PX = 250;
 const SCREEN_MARGIN_PX = 8;
 const ANIMATION_DURATION_MS = 230;
+const ANIMATION_DURATION_REDUCED_MOTION_MS = 150;
 
 const params = new URLSearchParams(window.location.search);
 const parentVisualViewport = {
@@ -378,10 +379,16 @@ const { matches: prefersReducedMotion } = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 );
 
+let animation;
+
 if (prefersReducedMotion) {
-  popup.style.opacity = "1";
+  animation = popup.animate([{ opacity: 0 }, { opacity: 1 }], {
+    duration: ANIMATION_DURATION_REDUCED_MOTION_MS,
+    easing: "cubic-bezier(0, 0, 0, 1)",
+    fill: "forwards",
+  });
 } else {
-  let animation = popup.animate(
+  animation = popup.animate(
     [
       { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
       { opacity: "1", transform: "none" },
@@ -392,10 +399,10 @@ if (prefersReducedMotion) {
       fill: "forwards",
     }
   );
-  await animation.finished;
-  animation.commitStyles();
-  animation.cancel();
 }
+await animation.finished;
+animation.commitStyles();
+animation.cancel();
 
 function getFormattedDate() {
   const now = Temporal.Now.plainDateTimeISO();
@@ -715,15 +722,24 @@ async function calculatePopupPosition(
 
 function waitforStableLayout() {
   return new Promise(resolve => {
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        if (entry.contentRect.width >= 12) {
-          observer.disconnect();
-          resolve();
-          return;
+    function addObserver() {
+      const observer = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          if (entry.contentRect.width >= 12) {
+            observer.disconnect();
+            resolve();
+            return;
+          }
         }
-      }
-    });
-    observer.observe(document.documentElement);
+      });
+
+      observer.observe(document.documentElement);
+    }
+
+    if (document.readyState === "complete") {
+      addObserver();
+    } else {
+      window.addEventListener("load", addObserver, { once: true });
+    }
   });
 }

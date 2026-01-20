@@ -5,10 +5,10 @@ function handleInputElement(input, event) {
     if (message.type === "showPicker") {
       try {
         input.showPicker();
-        port.postMessage({ type: "showPickerSucceeded", success: true });
+        port.postMessage({ type: "showPickerSuccess", succeeded: true });
         port.disconnect();
       } catch (error) {
-        port.postMessage({ type: "showPickerSucceeded", success: false });
+        port.postMessage({ type: "showPickerSuccess", succeeded: false });
       }
       return;
     }
