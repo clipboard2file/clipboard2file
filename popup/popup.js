@@ -379,25 +379,27 @@ const { matches: prefersReducedMotion } = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 );
 
-let animation = popup.animate(
-  [
-    { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
-    { opacity: "1", transform: "none" },
-  ],
-  {
-    duration: ANIMATION_DURATION_MS,
-    easing: "cubic-bezier(.07, .95, 0, 1)",
-    fill: "forwards",
-  }
-);
+let keyframes = [
+  { transform: "skew(2deg, 1deg) scale(0.95)", opacity: "0" },
+  { opacity: "1", transform: "none" },
+];
+
+let options = {
+  duration: ANIMATION_DURATION_MS,
+  easing: "cubic-bezier(.07, .95, 0, 1)",
+  fill: "forwards",
+};
 
 if (prefersReducedMotion) {
-  animation = popup.animate([{ opacity: 0 }, { opacity: 1 }], {
+  keyframes = [{ opacity: 0 }, { opacity: 1 }];
+  options = {
     duration: ANIMATION_DURATION_REDUCED_MOTION_MS,
     easing: "cubic-bezier(0, 0, 0, 1)",
     fill: "forwards",
-  });
+  };
 }
+
+const animation = popup.animate(keyframes, options);
 
 await animation.finished;
 animation.commitStyles();
