@@ -16,10 +16,13 @@
         <button id="formatToggle" type="button" hidden>
           <span></span>
         </button>
+        <div id="formatPopover" role="menu" hidden>
+          <button class="format-option" data-format="png" role="menuitem">PNG</button>
+          <button class="format-option" data-format="jpeg" role="menuitem">JPG</button>
+          <button class="format-option" data-format="gif" role="menuitem">GIF</button>
+        </div>
       </div>
-      <button id="floatingFormatToggle" type="button" hidden>
-        <span></span>
-      </button>
+
       <button id="preview">
         <img tabindex="-1" id="imagePreview" draggable="false" />
         <div tabindex="-1" id="textPreview" hidden></div>

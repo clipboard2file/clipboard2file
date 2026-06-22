@@ -53,6 +53,7 @@ export const options = [
     options: [
       { value: "png", text: "PNG" },
       { value: "jpeg", text: "JPG" },
+      { value: "gif", text: "GIF" },
     ],
   },
   {

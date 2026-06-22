@@ -245,7 +245,7 @@ function createCustomInput(container, item, settings) {
   const saveInput = async () => {
     let val = input.value.trim();
     if (item.key === "customFilenameImage")
-      val = val.replace(/\.(png|jpg|jpeg)$/i, "");
+      val = val.replace(/\.(png|jpg|jpeg|gif)$/i, "");
     else if (item.key === "textExtension") val = val.replace(/^\./, "");
 
     val = val.trim();
@@ -329,8 +329,15 @@ async function refreshUI() {
 
   const extSpanImage = document.getElementById("ext-customFilenameImage");
   if (extSpanImage) {
-    extSpanImage.textContent =
-      settings["defaultFileType"] === "jpeg" ? ".jpg" : ".png";
+    const fileType = settings["defaultFileType"];
+
+    const extensionMap = {
+      jpeg: ".jpg",
+      png: ".png",
+      gif: ".gif",
+    };
+
+    extSpanImage.textContent = extensionMap[fileType] || ".png";
   }
   const extSpanText = document.getElementById("ext-customFilenameText");
   if (extSpanText) {

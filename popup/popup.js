@@ -54,7 +54,8 @@ const popup = document.getElementById("popup");
 const filenameContainer = document.getElementById("filenameContainer");
 const filenameInput = document.getElementById("filename");
 const formatToggle = document.getElementById("formatToggle");
-const floatingFormatToggle = document.getElementById("floatingFormatToggle");
+const formatPopover = document.getElementById("formatPopover");
+const formatOptions = document.querySelectorAll(".format-option");
 const preview = document.getElementById("preview");
 const imagePreview = document.getElementById("imagePreview");
 const textPreview = document.getElementById("textPreview");
@@ -98,8 +99,14 @@ const computeFinalFilename = () => {
     return input.length === 0 ? `${baseName}.${textExtension}` : baseName;
   }
 
-  const ext = currentFormat === "jpeg" ? ".jpg" : ".png";
-  return baseName.replace(/\.(png|jpg|jpeg)$/i, "") + ext;
+  const extensionMap = {
+    jpeg: ".jpg",
+    png: ".png",
+    gif: ".gif",
+  };
+
+  const ext = extensionMap[currentFormat] || ".png";
+  return baseName.replace(/\.(png|jpg|jpeg|gif)$/i, "") + ext;
 };
 
 const updatePreview = () => {
@@ -137,11 +144,20 @@ const setFileType = async (type, saveToStorage = false) => {
 
     if (type === "jpeg") {
       currentBlob = await convertToJpeg(originalBlob, jpegQuality);
+    } else if (type === "gif") {
+      currentBlob = await convertToGif(originalBlob);
     } else {
       currentBlob = originalBlob;
     }
 
     updatePreview();
+
+    for (const opt of formatOptions) {
+      opt.setAttribute(
+        "aria-checked",
+        opt.dataset.format === type ? "true" : "false"
+      );
+    }
 
     if (saveToStorage) {
       browser.storage.local.set({ defaultFileType: type });
@@ -194,11 +210,7 @@ if (showFilenameBox) {
 }
 
 if (settings.showFormatToggleButton && clipboardType === "image") {
-  if (showFilenameBox) {
-    formatToggle.hidden = false;
-  } else {
-    floatingFormatToggle.hidden = false;
-  }
+  formatToggle.hidden = false;
 }
 
 showAllFiles.textContent = browser.i18n.getMessage("showAllFiles");
@@ -284,24 +296,23 @@ const handleEnter = e => {
 filenameInput.addEventListener("keydown", handleEnter);
 textPreview.addEventListener("keydown", handleEnter);
 
-const handleFormatToggle = async e => {
-  e.preventDefault();
-  if (
-    e.button === 2 ||
-    (e.type === "click" && e.mozInputSource === MouseEvent.MOZ_SOURCE_MOUSE)
-  ) {
-    return;
-  }
-
-  const newType = currentFormat === "jpeg" ? "png" : "jpeg";
-  await setFileType(newType, true);
-};
-
 if (clipboardType === "image") {
-  formatToggle.addEventListener("mousedown", handleFormatToggle);
-  floatingFormatToggle.addEventListener("mousedown", handleFormatToggle);
-  formatToggle.addEventListener("click", handleFormatToggle);
-  floatingFormatToggle.addEventListener("click", handleFormatToggle);
+  formatToggle.addEventListener("mousedown", e => {
+    e.preventDefault();
+  });
+
+  formatToggle.addEventListener("click", e => {
+    formatPopover.hidden = !formatPopover.hidden;
+  });
+
+  for (const opt of formatOptions) {
+    opt.addEventListener("click", async e => {
+      e.stopPropagation();
+      const fmt = e.currentTarget.dataset.format;
+      await setFileType(fmt, true);
+      formatPopover.hidden = true;
+    });
+  }
 }
 
 preview.addEventListener(
@@ -423,6 +434,14 @@ async function convertToJpeg(blob, quality) {
     type: "image/jpeg",
     quality: quality,
   });
+}
+
+async function convertToGif(blob) {
+  if (blob.type === "image/gif") {
+    return blob;
+  }
+
+  return new Blob([await blob.arrayBuffer()], { type: "image/gif" });
 }
 
 function showPicker(inputAttributes) {
