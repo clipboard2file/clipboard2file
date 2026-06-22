@@ -84,8 +84,7 @@ button {
       content: ".png";
     }
 
-    #formatToggle span::after,
-    #floatingFormatToggle span::after {
+    #formatToggle span::after {
       content: "PNG";
     }
   }
@@ -95,9 +94,18 @@ button {
       content: ".jpg";
     }
 
-    #formatToggle span::after,
-    #floatingFormatToggle span::after {
+    #formatToggle span::after {
       content: "JPG";
+    }
+  }
+
+  &[data-format="gif"] {
+    #filename::after {
+      content: ".gif";
+    }
+
+    #formatToggle span::after {
+      content: "GIF";
     }
   }
 }
@@ -205,8 +213,7 @@ button {
   }
 }
 
-#formatToggle,
-#floatingFormatToggle {
+#formatToggle {
   display: flex;
   flex: 0 0 auto;
   justify-content: center;
@@ -219,6 +226,13 @@ button {
   text-transform: uppercase;
   box-shadow: 0 0 calc(4px / var(--devicePixelRatio))
     light-dark(transparent, rgba(0, 0, 0, 0.5));
+  min-width: calc(42px / var(--devicePixelRatio));
+  min-height: calc(24px / var(--devicePixelRatio));
+  margin-inline-start: calc(6px / var(--devicePixelRatio));
+  margin-inline-end: calc(8px / var(--devicePixelRatio));
+  font-size: calc(12px / var(--devicePixelRatio));
+  background-color: var(--toggle-bg);
+  border-radius: calc(4px / var(--devicePixelRatio));
 
   span {
     pointer-events: none;
@@ -232,42 +246,9 @@ button {
     outline: calc(2px / var(--devicePixelRatio)) solid var(--button-bg);
     outline-offset: 0px;
   }
-}
-
-#formatToggle {
-  min-width: calc(42px / var(--devicePixelRatio));
-  min-height: calc(24px / var(--devicePixelRatio));
-  margin-inline-start: calc(6px / var(--devicePixelRatio));
-  margin-inline-end: calc(8px / var(--devicePixelRatio));
-  font-size: calc(12px / var(--devicePixelRatio));
-  background-color: var(--toggle-bg);
-  border-radius: calc(4px / var(--devicePixelRatio));
 
   &:hover {
     background-color: var(--toggle-bg-hover);
-  }
-}
-
-#floatingFormatToggle {
-  position: absolute;
-  top: calc(12px / var(--devicePixelRatio));
-  right: calc(12px / var(--devicePixelRatio));
-  min-width: calc(46px / var(--devicePixelRatio));
-  font-size: calc(13px / var(--devicePixelRatio));
-  background-color: var(--floating-toggle-bg);
-  border: calc(1px / var(--devicePixelRatio)) solid
-    var(--floating-toggle-border);
-  border-radius: calc(4px / var(--devicePixelRatio));
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: calc(-6px / var(--devicePixelRatio));
-  }
-
-  &:hover {
-    background-color: var(--floating-toggle-bg-hover);
-    border-color: var(--floating-toggle-border-hover);
   }
 }
 
@@ -290,5 +271,66 @@ button {
   &:focus-visible {
     outline: calc(2px / var(--devicePixelRatio)) solid var(--button-bg);
     outline-offset: calc(2px / var(--devicePixelRatio));
+  }
+}
+
+&[data-format="gif"] {
+  #filename::after {
+    content: ".gif";
+  }
+
+  #formatToggle span::after,
+  #floatingFormatToggle span::after {
+    content: "GIF";
+  }
+}
+
+#formatPopover {
+  position: absolute;
+  top: calc(100% + 4px / var(--devicePixelRatio));
+  top: calc(24px * 2 / var(--devicePixelRatio));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2px / var(--devicePixelRatio));
+  padding: calc(4px / var(--devicePixelRatio));
+  background-color: var(--popup-bg);
+  border: calc(1px / var(--devicePixelRatio)) solid var(--popup-border);
+  border-radius: calc(6px / var(--devicePixelRatio));
+  box-shadow: 0 calc(4px / var(--devicePixelRatio))
+    calc(12px / var(--devicePixelRatio)) var(--popup-shadow);
+  z-index: 10;
+
+  &[hidden] {
+    display: none !important;
+  }
+}
+
+.format-option {
+  display: block;
+  width: 100%;
+  min-width: calc(52px / var(--devicePixelRatio));
+  padding-block: calc(5px / var(--devicePixelRatio));
+  padding-inline: calc(10px / var(--devicePixelRatio));
+  font-size: calc(12px / var(--devicePixelRatio));
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--toggle-text);
+  background-color: transparent;
+  border-radius: calc(3px / var(--devicePixelRatio));
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--toggle-bg-hover);
+  }
+
+  &[aria-checked="true"] {
+    background-color: var(--toggle-bg);
+  }
+
+  &:focus-visible {
+    outline: calc(2px / var(--devicePixelRatio)) solid var(--button-bg);
+    outline-offset: 0;
   }
 }

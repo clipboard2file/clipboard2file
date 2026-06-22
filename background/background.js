@@ -102,12 +102,23 @@ browser.runtime.onConnect.addListener(port => {
           let blob = null;
           let blobType = null;
 
-          const img = items.find(i => i.types.includes("image/png"));
+          const supportedImageTypes = [
+            "image/png",
+            "image/jpeg",
+            "image/gif",
+          ];
+
+          const img = items.find(i =>
+            supportedImageTypes.some(t => i.types.includes(t))
+          );
 
           if (img && (await getSetting("enableImagePaste"))) {
-            const imgBlob = await img.getType("image/png");
+            const imgType = supportedImageTypes.find(t =>
+              img.types.includes(t)
+            );
+            const imgBlob = await img.getType(imgType);
             if (imgBlob.size > 0) {
-              blob = await img.getType("image/png");
+              blob = imgBlob;
               blobType = "image";
             }
           }
